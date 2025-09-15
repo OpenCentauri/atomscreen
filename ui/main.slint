@@ -1,0 +1,223 @@
+import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView } from "std-widgets.slint";
+//import { VirtualKeyboard } from "virtual_keyboard.slint";
+import "../Figtree-Regular.ttf";
+
+component Page inherits Rectangle {
+    in property <string> header <=> h.text;
+    width: 100%; 
+    height: 100%;
+
+    VerticalLayout {
+        HorizontalLayout { 
+            x: 10px;
+            h := Text {
+                font-weight: 900;
+                horizontal-alignment: left;
+                y: 10px;
+            }
+            padding-bottom: 20px;
+            vertical-stretch: 0;
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+            @children
+        }
+    }
+}
+
+component PageOne inherits Page {
+    header: "This is page 1";
+
+    Rectangle {
+
+        //Text { text: "This is page 2"; }
+        ProgressIndicator {
+            indeterminate: true;
+            width: 200px;
+        }
+    }
+}
+
+component PageTwo inherits Page {
+    header: "This is page 2";
+
+    VerticalLayout {
+        Text {
+            text: "Hello!";
+        }
+        Rectangle {
+            background: #ff0000;
+        }
+        Rectangle {
+            background: #00ff00;
+        }
+        Rectangle {
+            background: #0000ff;
+        }
+    }
+}
+
+component PageThree inherits Page {
+    header: "This is page 3";
+
+    ScrollView {
+        VerticalLayout {
+            for t in [ "Hello", "World", "!", "!", "!", "!", "!", "!", "hello atom", ":)", "why", "does", "this", "have", "to", "be", "so", "long?", "a", "b", "c" ] : Text {
+                text: t;
+            }
+            Rectangle {
+                background: #ff0000;
+                height: 100px;
+            }
+            Rectangle {
+                background: #00ff00;
+                height: 100px;
+            }
+            Rectangle {
+                background: #0000ff;
+                height: 100px;
+            }
+        }
+    }
+
+}
+
+component IconButton inherits Rectangle {
+    in property <image> icon <=> img.source;
+    in property <bool> checked: false;
+    in property <bool> left-side: true;
+    in property <brush> foreground: checked ? Palette.accent-foreground : Palette.foreground;
+
+    callback clicked();
+
+    background: checked ? Palette.accent-background : Palette.background;
+    border-top-left-radius: left-side ? StyleMetrics.layout-padding : 0;
+    border-bottom-left-radius: left-side ? StyleMetrics.layout-padding : 0;
+    border-top-right-radius: left-side ? 0 : StyleMetrics.layout-padding;
+    border-bottom-right-radius: left-side ? 0 : StyleMetrics.layout-padding;
+
+    img := Image {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        colorize: foreground;
+    }
+
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+component TopBar inherits Rectangle {
+    height: 20px;
+    width: 100%;
+    background: Palette.alternate-background;
+
+    HorizontalLayout {
+        padding-top: 2px;
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 10px;
+        Text {
+            text: "Printer: Idle";
+            color: Palette.alternate-foreground;
+            font-weight: 900;
+            horizontal-stretch: 0;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        HorizontalLayout {
+            Image {
+                source: @image-url("assets/extruder.svg");
+                colorize: Palette.alternate-foreground;
+            }
+            Text {
+                text: "20°C";
+                color: Palette.alternate-foreground;
+                font-weight: 900;
+            }
+        }
+        
+        HorizontalLayout {
+            Image {
+                source: @image-url("assets/bed.svg");
+                colorize: Palette.alternate-foreground;
+            }
+            Text {
+                text: "20°C";
+                color: Palette.alternate-foreground;
+                font-weight: 900;
+            }
+        }
+
+    }
+}
+
+export component AppWindow inherits Window {
+    in-out property <int> current-page: 0;
+
+    //width: 480px;
+    //height: 272px;
+
+    // The buttons to switch pages
+
+    default-font-family: "Figtree";
+
+    VerticalLayout { 
+        TopBar {
+
+        }
+
+        HorizontalLayout {
+            VerticalLayout {
+                spacing: 5px;
+                horizontal-stretch: 0;
+                min-width: 50px;
+                IconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
+                IconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
+                IconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
+                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3; } foreground: red; }
+            }
+
+            Rectangle { 
+                horizontal-stretch: 1;
+
+                PageOne { visible: root.current-page == 0;  }
+                PageTwo { visible: root.current-page == 1;  }
+                PageThree { visible: root.current-page == 2;  }
+            }
+
+            VerticalLayout {
+                spacing: 5px;
+                horizontal-stretch: 0;
+                min-width: 50px;
+                IconButton { icon: @image-url("assets/fan.svg"); checked: root.current-page == 4; clicked => { root.current-page = 4; } left-side: false; }
+                IconButton { icon: @image-url("assets/quickaction.svg"); checked: root.current-page == 5; clicked => { root.current-page = 5; } left-side: false; }
+                IconButton { icon: @image-url("assets/console.svg"); checked: root.current-page == 6; clicked => { root.current-page = 6; } left-side: false; }
+                IconButton { icon: @image-url("assets/settings.svg"); checked: root.current-page == 7; clicked => { root.current-page = 7; } left-side: false; }
+            }
+        }
+    }
+/*
+    keyboard := VirtualKeyboard {
+        y: parent.height - self.height;
+    }
+*/
+    /*
+    VerticalLayout {
+        HorizontalLayout {
+            Button { text: "Page 1"; clicked => { root.current-page = 0; } checked: root.current-page == 0; icon: @image-url("assets/print.svg"); }
+            Button { text: "Page 2"; clicked => { root.current-page = 1; } checked: root.current-page == 1; }
+            Button { text: "Page 3"; clicked => { root.current-page = 2; } checked: root.current-page == 2;}
+            
+        }
+
+        Rectangle { 
+            PageOne { visible: root.current-page == 0;  }
+        }
+    }
+    */
+}
