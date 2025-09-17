@@ -3049,6 +3049,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
+ "optional_struct",
  "serde",
  "serde_json",
  "tokio",
@@ -3590,6 +3591,27 @@ name = "once_cell_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4895175b425cb1f87721b59f0f286c2092bd4af812243672510e1ac53e2e0ad"
+
+[[package]]
+name = "optional_struct"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14199f59efce6ed2c5854f0abc725c32eedfbd02c6ef82c9733c726f3fc6dc91"
+dependencies = [
+ "optional_struct_macro",
+ "serde",
+]
+
+[[package]]
+name = "optional_struct_macro"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5eba042d9efe5e108e0df9ce2f85c540fc4f94f41c6821cbcf70ed47c1221da"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "orbclient"

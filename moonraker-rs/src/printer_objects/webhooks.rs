@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use optional_struct::*;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum KlippyState
 {
@@ -16,7 +17,8 @@ impl Default for KlippyState {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[optional_struct]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Webhooks
 {
     pub state: KlippyState,
@@ -28,6 +30,17 @@ impl Default for Webhooks {
         Self {
             state: KlippyState::default(),
             state_message: String::new(),
+        }
+    }
+}
+
+impl Webhooks {
+    pub fn overlay(&mut self, webhooks: OptionalWebhooks) {
+        if let Some(state) = webhooks.state {
+            self.state = state;
+        }
+        if let Some(state_message) = webhooks.state_message {
+            self.state_message = state_message;
         }
     }
 }

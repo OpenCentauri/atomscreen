@@ -2,6 +2,26 @@ import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView } from "st
 //import { VirtualKeyboard } from "virtual_keyboard.slint";
 import "../Figtree-Regular.ttf";
 
+
+export struct TemperatureSensor
+{
+    name: string,
+    temperature: int,
+}
+
+export struct Heater 
+{
+    temperature: int,
+    target: int,
+}
+
+export global State 
+{
+    in-out property<[TemperatureSensor]> temperature_sensors;
+    in-out property<Heater> extruder;
+    in-out property<Heater> heated_bed;
+} 
+
 component Page inherits Rectangle {
     in property <string> header <=> h.text;
     width: 100%; 
@@ -135,7 +155,7 @@ component TopBar inherits Rectangle {
                 colorize: Palette.alternate-foreground;
             }
             Text {
-                text: "20°C";
+                text: State.extruder.temperature + "°C";
                 color: Palette.alternate-foreground;
                 font-weight: 900;
             }

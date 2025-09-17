@@ -13,6 +13,8 @@ use tokio::net::TcpStream;
 use tokio::sync::broadcast::{Receiver, Sender};
 use tokio::sync::{broadcast, Mutex};
 use tokio::time::sleep;
+use crate::cache::Cache;
+
 use super::printer_objects::*;
 use hyper_util::rt::TokioIo;
 
@@ -61,7 +63,7 @@ impl<'de> Deserialize<'de> for JsonRpcResponse {
         D: serde::Deserializer<'de>,
     {
         let value = serde_json::Value::deserialize(deserializer)?;
-
+        
         if value.get("method").is_some() {
             let notification = JsonRpcNotification::deserialize(value)
                 .map_err(serde::de::Error::custom)?;
@@ -124,7 +126,7 @@ enum MoonrakerEventParameters
 #[derive(Debug)]
 pub struct MoonrakerEventNotifyStatusUpdate
 {
-    pub events: Vec<PrinterEvent>,
+    pub events: Vec<OptionalPrinterEvent>,
 }
 
 impl<'de> Deserialize<'de> for MoonrakerEventNotifyStatusUpdate {
@@ -144,34 +146,34 @@ impl<'de> Deserialize<'de> for MoonrakerEventNotifyStatusUpdate {
 
             let event = match first_part_of_name
             {
-                "webhooks" => PrinterEvent::Webhooks(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "motion_report" => PrinterEvent::MotionReport(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "gcode_move" => PrinterEvent::GcodeMove(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "toolhead" => PrinterEvent::Toolhead(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "extruder" => PrinterEvent::Extruder(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "heater_bed" => PrinterEvent::HeaterBed(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "fan" => PrinterEvent::Fan(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "idle_timeout" => PrinterEvent::IdleTimeout(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "virtual_sdcard" => PrinterEvent::VirtualSdcard(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "print_stats" => PrinterEvent::PrintStats(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "display_status" => PrinterEvent::DisplayStatus(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
-                "temperature_sensor" => PrinterEvent::TemperatureSensor(NamedTemperatureSensor {
+                "webhooks" => OptionalPrinterEvent::Webhooks(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "motion_report" => OptionalPrinterEvent::MotionReport(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "gcode_move" => OptionalPrinterEvent::GcodeMove(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "toolhead" => OptionalPrinterEvent::Toolhead(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "extruder" => OptionalPrinterEvent::Extruder(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "heater_bed" => OptionalPrinterEvent::HeaterBed(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "fan" => OptionalPrinterEvent::Fan(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "idle_timeout" => OptionalPrinterEvent::IdleTimeout(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "virtual_sdcard" => OptionalPrinterEvent::VirtualSdcard(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "print_stats" => OptionalPrinterEvent::PrintStats(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "display_status" => OptionalPrinterEvent::DisplayStatus(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "temperature_sensor" => OptionalPrinterEvent::TemperatureSensor(NamedOptionalTemperatureSensor {
                     name: last_part_of_name.to_string(),
                     sensor: serde_json::from_value(object_value).map_err(serde::de::Error::custom)?,
                 }),
-                "temperature_fan" => PrinterEvent::TemperatureFan(NamedTemperatureFan {
+                "temperature_fan" => OptionalPrinterEvent::TemperatureFan(NamedOptionalTemperatureFan {
                     name: last_part_of_name.to_string(),
                     fan: serde_json::from_value(object_value).map_err(serde::de::Error::custom)?,
                 }),
-                "filament_switch_sensor" => PrinterEvent::FilamentSwitchSensor(NamedFilamentSwitchSensor {
+                "filament_switch_sensor" => OptionalPrinterEvent::FilamentSwitchSensor(NamedOptionalFilamentSwitchSensor {
                     name: last_part_of_name.to_string(),
                     sensor: serde_json::from_value(object_value).map_err(serde::de::Error::custom)?,
                 }),
-                "output_pin" => PrinterEvent::OutputPin(NamedOutputPin {
+                "output_pin" => OptionalPrinterEvent::OutputPin(NamedOptionalOutputPin {
                     name: last_part_of_name.to_string(),
                     pin: serde_json::from_value(object_value).map_err(serde::de::Error::custom)?,
                 }),
-                "exclude_object" => PrinterEvent::ExcludeObject(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
+                "exclude_object" => OptionalPrinterEvent::ExcludeObject(serde_json::from_value(object_value).map_err(serde::de::Error::custom)?),
                 _ => {
                     //eprintln!("Unknown object name: {}", object_name);
                     continue; // Skip unknown object names
@@ -222,6 +224,26 @@ pub enum PrinterEvent {
     FilamentSwitchSensor(NamedFilamentSwitchSensor),
     OutputPin(NamedOutputPin),
     ExcludeObject(ExcludeObject),
+}
+
+#[derive(Debug)]
+pub enum OptionalPrinterEvent {
+    Webhooks(OptionalWebhooks),
+    MotionReport(OptionalMotionReport),
+    GcodeMove(OptionalGcodeMove),
+    Toolhead(OptionalToolhead),
+    Extruder(OptionalExtruder),
+    HeaterBed(OptionalHeaterBed),
+    Fan(OptionalFan),
+    IdleTimeout(OptionalIdleTimeout),
+    VirtualSdcard(OptionalVirtualSdcard),
+    PrintStats(OptionalPrintStats),
+    DisplayStatus(OptionalDisplayStatus),
+    TemperatureSensor(NamedOptionalTemperatureSensor),
+    TemperatureFan(NamedOptionalTemperatureFan),
+    FilamentSwitchSensor(NamedOptionalFilamentSwitchSensor),
+    OutputPin(NamedOptionalOutputPin),
+    ExcludeObject(OptionalExcludeObject),
 }
 
 #[derive(Debug)]
@@ -399,10 +421,10 @@ pub struct MoonrakerConnection
 {
     host: String,
     request: Request<Empty<Bytes>>,
-    inbound_event_sender : RefCell<Sender<Arc<GeneralEvent>>>,
+    inbound_event_sender : Sender<Arc<GeneralEvent>>,
     inbound_event_listener: Receiver<Arc<GeneralEvent>>,
     outbound_event_sender : Sender<Arc<SendingEvent>>,
-    outbound_event_listener: RefCell<Receiver<Arc<SendingEvent>>>,
+    outbound_event_listener: Receiver<Arc<SendingEvent>>,
     incrementing_id: Mutex<u32>,
 }
 
@@ -435,10 +457,10 @@ impl MoonrakerConnection
         MoonrakerConnection {
             host: host,
             request: req,
-            inbound_event_sender: RefCell::new(inbound_event_sender),
+            inbound_event_sender: inbound_event_sender,
             inbound_event_listener: inbound_event_listener,
             outbound_event_sender: outbound_event_sender,
-            outbound_event_listener: RefCell::new(outbound_event_listener),
+            outbound_event_listener: outbound_event_listener,
             incrementing_id: Mutex::new(1),
         }
     }
@@ -455,13 +477,18 @@ impl MoonrakerConnection
         {
             // TODO: Remove the mutexes here
             // TODO: Kill old threads if they exist
-            let inbound_sender = self.inbound_event_sender.borrow_mut().clone();
-            let mut outbound_listener = self.outbound_event_listener.borrow_mut().resubscribe();
+            // TODO: Scope these listeners/senders
+            let inbound_sender = self.inbound_event_sender.clone();
+            let inbound_sender_2 = self.inbound_event_sender.clone();
+            let mut outbound_listener = self.outbound_event_listener.resubscribe();
             let outbound_event_sender = self.outbound_event_sender.clone();
 
             let _ = inbound_sender.send(Arc::new(GeneralEvent::Disconnected));
             let mut reader;
             let mut writer;
+
+            let cache = Arc::new(Mutex::new(Cache::new()));
+            let cache_clone = cache.clone();
 
             match self.reconnect().await {
                 Ok((r, w)) => {
@@ -476,7 +503,7 @@ impl MoonrakerConnection
                 }
             }
 
-            async fn write_method(method: &str, params: Option<serde_json::Value>, id: u32, writer : &mut WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>) -> Result<(), Box<dyn Error>> {
+            async fn write_method(method: &str, params: Option<serde_json::Value>, id: u32, writer : &mut WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>) -> Result<(), Box<dyn Error + Send + Sync>> {
                 let request = JsonRpcRequest {
                     jsonrpc: "2.0".to_string(),
                     method: method.to_string(),
@@ -550,7 +577,8 @@ impl MoonrakerConnection
                                             MoonrakerEventParameters::NotifyStatusUpdate(status_update) => {
                                                 for event in status_update.events
                                                 {
-                                                    let _ = inbound_sender.send(Arc::new(GeneralEvent::MoonrakerEvent(MoonrakerEvent::NotifyStatusUpdate(event))));
+                                                    let mut unlocked_cache = cache.lock().await;
+                                                    let _ = inbound_sender.send(Arc::new(GeneralEvent::MoonrakerEvent(MoonrakerEvent::NotifyStatusUpdate(unlocked_cache.complete_event(event)))));
                                                 }
                                             }
                                         }
@@ -587,7 +615,7 @@ impl MoonrakerConnection
                                 Some(frame) => {
                                     match writer.write_frame(frame).await {
                                         Ok(_) => Ok(()),
-                                        Err(e) => Err(Box::new(e) as Box<dyn Error>),
+                                        Err(e) => Err(Box::new(e) as Box<dyn Error + Send + Sync>),
                                     }
                                 }
                                 None => Ok(()),
@@ -613,12 +641,18 @@ impl MoonrakerConnection
             };
 
             // TOOD: Don't subscribe to objects we don't have a use for.
-            if let Err(e) = self.post_printer_objects_subscribe(object_list.objects.clone()).await {
+            let initial_objects = self.post_printer_objects_subscribe(object_list.objects.clone()).await;
+            if let Err(e) = initial_objects {
                 eprintln!("Error subscribing to printer objects: {}", e);
-                self.post_printer_objects_subscribe(object_list.objects).await.unwrap();
                 reader_handle.abort();
                 writer_handle.abort();
                 continue;
+            }
+
+            for event in initial_objects.unwrap().status.events
+            {
+                let mut unlocked_cache = cache_clone.lock().await;
+                let _ = inbound_sender_2.send(Arc::new(GeneralEvent::MoonrakerEvent(MoonrakerEvent::NotifyStatusUpdate(unlocked_cache.complete_event(event)))));
             }
 
             reader_handle.await.unwrap();
@@ -626,7 +660,7 @@ impl MoonrakerConnection
         }
     }
 
-    pub async fn send_request<T>(&self, method: SendingEventType) -> Result<T, Box<dyn Error>>
+    pub async fn send_request<T>(&self, method: SendingEventType) -> Result<T, Box<dyn Error + Send + Sync>>
     where T : DeserializeOwned
     {
         let mut listener = self.inbound_event_listener.resubscribe();
@@ -653,15 +687,15 @@ impl MoonrakerConnection
         }
     }
 
-    pub async fn get_printer_object_list(&self) -> Result<PrinterObjectListResponse, Box<dyn Error>> {
+    pub async fn get_printer_object_list(&self) -> Result<PrinterObjectListResponse, Box<dyn Error + Send + Sync>> {
         self.send_request(SendingEventType::PrinterObjectList).await
     }
 
-    pub async fn post_printer_objects_subscribe(&self, objects: Vec<String>) -> Result<PrinterObjectsSubscribeResult, Box<dyn Error>> {
+    pub async fn post_printer_objects_subscribe(&self, objects: Vec<String>) -> Result<PrinterObjectsSubscribeResult, Box<dyn Error + Send + Sync>> {
         self.send_request(SendingEventType::PrinterObjectsSubscribe(PrinterObjectsSubscribeParams::all_fields(objects))).await
     }
 
-    pub async fn reconnect(&self) -> Result<(FragmentCollectorRead<ReadHalf<TokioIo<Upgraded>>>, WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>), Box<dyn Error>> {
+    pub async fn reconnect(&self) -> Result<(FragmentCollectorRead<ReadHalf<TokioIo<Upgraded>>>, WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>), Box<dyn Error + Send + Sync>> {
         let stream = TcpStream::connect(self.host.clone()).await?;
 
         let (ws, _) = handshake::client(&SpawnExecutor, self.request.clone(), stream).await?;
