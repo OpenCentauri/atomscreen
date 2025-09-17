@@ -6,6 +6,7 @@ pub fn init_display(config: &DisplayConfig) -> Result<AppWindow, ApplicationErro
         return default_config.init();
     }
 
+    #[cfg(unix)]
     if let Some(fb_config) = &config.framebuffer
     {
         return fb_config.init();

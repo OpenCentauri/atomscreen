@@ -4,8 +4,9 @@
 use std::{error::Error, fs, path::PathBuf, process::exit};
 
 use clap::Parser;
+use slint::PlatformError;
 
-use crate::hardware::init_display;
+use crate::{application_error::ApplicationError, hardware::init_display};
 
 
 mod config;
@@ -14,7 +15,8 @@ mod hardware;
 
 slint::include_modules!();
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let args = config::Args::parse();
 
     let config_path = PathBuf::from(&args.config);
@@ -26,9 +28,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     let config_str = fs::read_to_string(&config_path).unwrap();
     let config = toml::from_str::<config::Config>(&config_str).unwrap();
 
-    let ui = init_display(&config.display)?;
+    let handle = tokio::task::spawn_blocking(move || -> Result<(), ApplicationError> {
+        let ui = init_display(&config.display)?;
+        Ok(ui.run()?)
+    });
 
-    ui.run()?;
+    let moonraker_connection = moonraker_rs::moonraker_connection::MoonrakerConnection::new("localhost", 7125);
+
+    let mut receiver = moonraker_connection.get_listener();
+
+    tokio::spawn(async move {
+        loop {
+            match receiver.recv().await
+            {
+                Ok(event) => {
+                    // Forward event to Slint UI
+                    //println!("Received Moonraker event: {:?}", event);
+                },
+                Err(e) => {
+                    eprintln!("Error receiving Moonraker event: {}", e);
+                    break;
+                }
+            }
+        }
+    });
+
+    moonraker_connection.connection_loop().await;
+
+    panic!("Connection loop exited");
+
+    handle.await.unwrap().unwrap();
 
     Ok(())
 }

@@ -8,14 +8,21 @@ edition = "2021"
 [dependencies]
 slint = {version = "1.12.1", features = ["renderer-software"]}
 toml = "0"
-evdev = "0"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
 serde = "1.0"
+tokio = { version = "1", features = ["full"]}
+moonraker-rs = { path = "./moonraker-rs"}
+
+[target.'cfg(unix)'.dependencies]
+evdev = "0"
 linuxfb = "0"
 
 [build-dependencies]
 slint-build = "1.12.1"
+
+[workspace]
+members = ["moonraker-rs"]
 
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
 image = "cross-armv7:latest"

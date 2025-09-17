@@ -1,0 +1,13 @@
+[package]
+name = "moonraker-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = "1"
+serde_json = "1"
+fastwebsockets = { version = "0", features = ["upgrade", "unstable-split"]}
+hyper = "1"
+tokio = { version = "1", features = ["full"]}
+hyper-util = "0"
+http-body-util = "0"
