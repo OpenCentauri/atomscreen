@@ -43,7 +43,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let ui_weak_3 = ui.as_weak();
     
     tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_secs(1)).await;
         moonraker_connection.connection_loop().await;
     });
 
