@@ -37,11 +37,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     
     let mut receiver = moonraker_connection.get_listener();
     let ui = init_display(&config.display)?;
+    ui.global::<AppState>().set_moonraker_connected(false);
     let ui_weak = ui.as_weak();
     let ui_weak_2 = ui.as_weak();
     let ui_weak_3 = ui.as_weak();
     
     tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(1)).await;
         moonraker_connection.connection_loop().await;
     });
 
@@ -56,11 +58,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     if let GeneralEvent::Connected = &*event 
                     {
-                        let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true));
+                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true)).unwrap();
                     }
                     else if let GeneralEvent::Disconnected = &*event 
                     {
-                        let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false));
+                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false)).unwrap();
                     }
                     else if let GeneralEvent::MoonrakerEvent(moonraker_event) = &*event
                     {
@@ -68,24 +70,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         {
                             if let PrinterEvent::Extruder(extruder_event) = status_update
                             {
-                                println!("Extruder event: {:?}", extruder_event);
+                                //println!("Extruder event: {:?}", extruder_event);
                                 let extruder = Heater { target: extruder_event.target as i32, temperature: extruder_event.temperature as i32};
                                 
-                                let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_extruder(extruder));
+                                ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_extruder(extruder)).unwrap();
                             }
 
                             if let PrinterEvent::HeaterBed(heater_bed_event) = status_update
                             {
                                 let bed = Heater { target: heater_bed_event.target as i32, temperature: heater_bed_event.temperature as i32};
 
-                                let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_heated_bed(bed));
+                                ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_heated_bed(bed)).unwrap();
                             }
 
                             if let PrinterEvent::TemperatureSensor(temperature_sensor_event) = status_update
                             {
                                 let sensor_event = TemperatureSensor { name: SharedString::from(&temperature_sensor_event.name), temperature: temperature_sensor_event.sensor.temperature as i32 };
 
-                                let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                                ui_weak.upgrade_in_event_loop(move |ui| {
                                     let temperature_sensors = ui.global::<State>().get_temperature_sensors();
                                     let current_sensors = temperature_sensors.as_any().downcast_ref::<VecModel<TemperatureSensor>>();
 
@@ -104,7 +106,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                     }
 
                                     ui.global::<State>().set_temperature_sensors(ModelRc::new(Rc::new(VecModel::from(entries))));
-                                });
+                                }).unwrap();
                             }
                         }
 
@@ -230,8 +232,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         SharedString::from(format!("{:.2} {}", value, units[idx]))
     });
-
-    ui.global::<AppState>().set_moonraker_connected(false);
 
     tokio::task::block_in_place(|| {
         ui.run().unwrap();
