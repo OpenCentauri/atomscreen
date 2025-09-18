@@ -188,6 +188,10 @@ export struct MoonrakerFileTest
     thumbnail: image,
 }
 
+export global AppState
+{
+    in-out property <bool> moonraker_connected: false;
+}
 
 export global Filesystem 
 {
@@ -211,6 +215,10 @@ component FileListView inherits Rectangle
 {
     property <MoonrakerFileTest> selected_file;
     property <int> thumbnail_index: 0;
+
+    init() => {
+        Filesystem.list_files();
+    }
 
     if Filesystem.loading: ProgressIndicator {
         indeterminate: true;
@@ -283,15 +291,9 @@ component BottomBar inherits Rectangle {
     }
 }
 
-export component AppWindow inherits Window {
+component MainView
+{
     in-out property <int> current-page: 0;
-
-    //width: 480px;
-    //height: 272px;
-
-    // The buttons to switch pages
-
-    default-font-family: "Figtree";
 
     VerticalLayout { 
         TopBar {
@@ -306,16 +308,16 @@ export component AppWindow inherits Window {
                 IconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
                 IconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
                 IconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3; Filesystem.list_files();  } foreground: red; }
+                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3;  } foreground: red; }
             }
 
             Rectangle { 
                 horizontal-stretch: 1;
 
-                PageOne { visible: root.current-page == 0;  }
+                //PageOne { visible: root.current-page == 0;  }
                 PageTwo { visible: root.current-page == 1;  }
                 PageThree { visible: root.current-page == 2;  }
-                if root.current-page == 3: PageFour { }
+                if root.current-page == 0: PageFour { }
             }
 
             VerticalLayout {
@@ -333,6 +335,52 @@ export component AppWindow inherits Window {
 
         }
     }
+}
+
+export component AppWindow inherits Window {
+    
+
+    width: 480px;
+    height: 272px;
+
+    // The buttons to switch pages
+
+    default-font-family: "Figtree";
+
+    if AppState.moonraker_connected: MainView {
+        width: 100%;
+        height: 100%;
+    }
+
+    if !AppState.moonraker_connected: VerticalLayout
+    {
+        VerticalLayout {
+            width: 100%;
+            spacing: 20px;
+            Rectangle {
+
+            }
+            Rectangle {
+                VerticalLayout { 
+                    width: 200px;
+                    spacing: 20px;
+                    alignment: center;
+                    Text {
+                        text: "Connecting to moonraker...";
+                        horizontal-alignment: center;
+                    }
+                    ProgressIndicator {
+                        width: 100%;
+                        indeterminate: true;
+                    }
+                } 
+            }
+            Rectangle {
+
+            }
+        }
+    }
+
 /*
     keyboard := VirtualKeyboard {
         y: parent.height - self.height;

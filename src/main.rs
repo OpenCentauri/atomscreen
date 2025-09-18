@@ -8,7 +8,7 @@ use moonraker_rs::moonraker_connection::{GeneralEvent, MoonrakerEvent, PrinterEv
 use slint::{Image, Model, ModelRc, PlatformError, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
 
-use crate::{application_error::ApplicationError, hardware::init_display};
+use crate::{application_error::ApplicationError, config::MoonrakerConfig, hardware::init_display};
 
 
 mod config;
@@ -29,8 +29,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let config_str = fs::read_to_string(&config_path).unwrap();
     let config = toml::from_str::<config::Config>(&config_str).unwrap();
+    let moonraker_config = config.moonraker.unwrap_or(MoonrakerConfig::default());
 
-    let moonraker_connection = Arc::new(moonraker_rs::moonraker_connection::MoonrakerConnection::new("localhost", 7125));
+    let moonraker_connection = Arc::new(moonraker_rs::moonraker_connection::MoonrakerConnection::new(&moonraker_config.host, moonraker_config.port));
     let moonraker_connection_clone = moonraker_connection.clone();
     let moonraker_connection_clone_2 = moonraker_connection.clone();
     
@@ -53,7 +54,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     //println!("Received Moonraker event: {:?}", event);
                     //connection_ref.get_listener();
 
-                    if let GeneralEvent::MoonrakerEvent(moonraker_event) = &*event
+                    if let GeneralEvent::Connected = &*event 
+                    {
+                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true)).unwrap();
+                    }
+                    else if let GeneralEvent::Disconnected = &*event 
+                    {
+                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false)).unwrap();
+                    }
+                    else if let GeneralEvent::MoonrakerEvent(moonraker_event) = &*event
                     {
                         if let MoonrakerEvent::NotifyStatusUpdate(status_update) = moonraker_event
                         {
@@ -221,6 +230,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         SharedString::from(format!("{:.2} {}", value, units[idx]))
     });
+
+    ui.global::<AppState>().set_moonraker_connected(false);
 
     tokio::task::block_in_place(|| {
         ui.run().unwrap();

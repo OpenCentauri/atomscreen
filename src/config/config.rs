@@ -1,7 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
+use crate::config::MoonrakerConfig;
+
 use super::{DisplayConfig};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct Config {
     pub display: DisplayConfig,
+    pub moonraker: Option<MoonrakerConfig>
 }

@@ -1,3 +1,7 @@
 [display.default]
 width = 480
 height = 272
+
+[moonraker]
+host = "localhost"
+port = 7125
