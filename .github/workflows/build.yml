@@ -22,13 +22,14 @@ jobs:
       - name: Build container
         run: docker build -t cross-armv7:latest -f armv7.dockerfile .
 
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
       - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v1
-        with:
-          command: build
-          target: ${{ matrix.platform.target }}
-          args: "--locked --release"
-          strip: true
+        run: cross build --target ${{ matrix.platform.target }} --locked --release
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
