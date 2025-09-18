@@ -13,3 +13,6 @@ hyper-util = "0"
 http-body-util = "0"
 optional_struct = "0"
 reqwest = "0"
+
+[target.armv7-unknown-linux-musleabihf.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }

@@ -56,11 +56,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     if let GeneralEvent::Connected = &*event 
                     {
-                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true)).unwrap();
+                        let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true));
                     }
                     else if let GeneralEvent::Disconnected = &*event 
                     {
-                        ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false)).unwrap();
+                        let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false));
                     }
                     else if let GeneralEvent::MoonrakerEvent(moonraker_event) = &*event
                     {
@@ -71,21 +71,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 println!("Extruder event: {:?}", extruder_event);
                                 let extruder = Heater { target: extruder_event.target as i32, temperature: extruder_event.temperature as i32};
                                 
-                                ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_extruder(extruder)).unwrap();
+                                let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_extruder(extruder));
                             }
 
                             if let PrinterEvent::HeaterBed(heater_bed_event) = status_update
                             {
                                 let bed = Heater { target: heater_bed_event.target as i32, temperature: heater_bed_event.temperature as i32};
 
-                                ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_heated_bed(bed)).unwrap();
+                                let _ = ui_weak.upgrade_in_event_loop(move |ui| ui.global::<State>().set_heated_bed(bed));
                             }
 
                             if let PrinterEvent::TemperatureSensor(temperature_sensor_event) = status_update
                             {
                                 let sensor_event = TemperatureSensor { name: SharedString::from(&temperature_sensor_event.name), temperature: temperature_sensor_event.sensor.temperature as i32 };
 
-                                ui_weak.upgrade_in_event_loop(move |ui| {
+                                let _ = ui_weak.upgrade_in_event_loop(move |ui| {
                                     let temperature_sensors = ui.global::<State>().get_temperature_sensors();
                                     let current_sensors = temperature_sensors.as_any().downcast_ref::<VecModel<TemperatureSensor>>();
 
@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                     }
 
                                     ui.global::<State>().set_temperature_sensors(ModelRc::new(Rc::new(VecModel::from(entries))));
-                                }).unwrap();
+                                });
                             }
                         }
 
