@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build container
-        runs: docker build -t cross-armv7:latest -f armv7.dockerfile .
+        run: docker build -t cross-armv7:latest -f armv7.dockerfile .
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v1
