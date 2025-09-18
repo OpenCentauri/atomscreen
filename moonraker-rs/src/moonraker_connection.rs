@@ -4,6 +4,7 @@ use std::{error::Error};
 use fastwebsockets::{FragmentCollectorRead, Frame, OpCode, Payload, WebSocketWrite};
 use fastwebsockets::{handshake, FragmentCollector, WebSocket};
 use http_body_util::Empty;
+use hyper::rt::Executor;
 use hyper::{body::Bytes, header, upgrade::Upgraded, Request};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -281,6 +282,8 @@ pub struct PrinterObjectsSubscribeResult
 pub enum SendingEventType
 {
     PrinterObjectList,
+    FileList(String), // Root
+    FileThumbnails(String), // Filename
     PrinterObjectsSubscribe(PrinterObjectsSubscribeParams),
     RawFrame(Mutex<Option<Frame<'static>>>),
     EndLoop,
@@ -417,6 +420,23 @@ impl MoonrakerConnectionBuilder
 
 */
 
+#[derive(Debug, Deserialize)]
+pub struct MoonrakerFile
+{
+    pub path: String,
+    pub modified: f32,
+    pub size: i32,
+    pub permissions: String
+}
+#[derive(Debug, Deserialize)]
+pub struct MoonrakerFileThumbnail
+{
+    pub width: i32,
+    pub height: i32,
+    pub size: i32,
+    pub thumbnail_path: String,
+}
+
 pub struct MoonrakerConnection
 {
     host: String,
@@ -513,7 +533,7 @@ impl MoonrakerConnection
 
                 let data = serde_json::to_string(&request).unwrap();
 
-                //println!("Sending request: {}", data);
+                println!("Sending request: {}", data);
 
                 let bytes = data.as_bytes().to_vec();
 
@@ -606,6 +626,8 @@ impl MoonrakerConnection
                     {
                         SendingEventType::PrinterObjectList => write_method("printer.objects.list", None, message.id, &mut writer).await,
                         SendingEventType::PrinterObjectsSubscribe(params) => write_method("printer.objects.subscribe", Some(serde_json::json!({"objects": params.objects})), message.id, &mut writer).await,
+                        SendingEventType::FileList(root) => write_method("server.files.list", Some(serde_json::json!({"root": root})), message.id, &mut writer).await,
+                        SendingEventType::FileThumbnails(filename) => write_method("server.files.thumbnails", Some(serde_json::json!({"filename": filename})), message.id, &mut writer).await,
                         SendingEventType::RawFrame(frame) => {
                             let frame = frame.lock().await.take();
                             println!("Got raw frame to send");
@@ -693,6 +715,23 @@ impl MoonrakerConnection
 
     pub async fn post_printer_objects_subscribe(&self, objects: Vec<String>) -> Result<PrinterObjectsSubscribeResult, Box<dyn Error + Send + Sync>> {
         self.send_request(SendingEventType::PrinterObjectsSubscribe(PrinterObjectsSubscribeParams::all_fields(objects))).await
+    }
+
+    // TODO: ALlow different roots
+    pub async fn get_file_list(&self) -> Result<Vec<MoonrakerFile>, Box<dyn Error + Send + Sync>> {
+        self.send_request(SendingEventType::FileList(String::from("gcodes"))).await
+    }
+
+    pub async fn get_thumbnails_for_file(&self, filename: &str) -> Result<Vec<MoonrakerFileThumbnail>, Box<dyn Error + Send + Sync>> {
+        self.send_request(SendingEventType::FileThumbnails(filename.to_string())).await
+    }
+
+    pub async fn download_thumbnail(&self, thumbnail_filename: &str) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+        let url = format!("http://{}/server/files/gcodes/{}", self.host, thumbnail_filename);
+
+        let body = reqwest::get(&url).await?.bytes().await?;
+
+        Ok(body.to_vec())
     }
 
     pub async fn reconnect(&self) -> Result<(FragmentCollectorRead<ReadHalf<TokioIo<Upgraded>>>, WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>), Box<dyn Error + Send + Sync>> {

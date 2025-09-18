@@ -28,6 +28,8 @@ component Page inherits Rectangle {
     height: 100%;
 
     VerticalLayout {
+        width: 100%;
+        height: 100%;
         HorizontalLayout { 
             x: 10px;
             h := Text {
@@ -176,6 +178,111 @@ component TopBar inherits Rectangle {
     }
 }
 
+
+export struct MoonrakerFileTest
+{
+    path: string,
+    modified: float,
+    size: int,
+    permissions: string,
+    thumbnail: image,
+}
+
+
+export global Filesystem 
+{
+    callback list_files();
+    callback download_thumbnail(index : int);
+    in-out property <[MoonrakerFileTest]> files: [{
+        path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",
+    }, {
+        path: "a-really-really-really-really-really-really-really-really-really-long-name.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--"
+    }];
+    in-out property <bool> loading: false;
+}
+
+export global Utils
+{
+    pure callback image_exists(image: image) -> bool;  
+    pure callback format_bytes(size: int) -> string;
+}
+
+component FileListView inherits Rectangle 
+{
+    property <MoonrakerFileTest> selected_file;
+    property <int> thumbnail_index: 0;
+
+    if Filesystem.loading: ProgressIndicator {
+        indeterminate: true;
+        width: 200px;
+    }
+
+    if !Filesystem.loading && selected_file.path == "": ScrollView {
+        VerticalLayout {
+            for f in Filesystem.files: VerticalLayout {
+                height: 40px;
+                width: 100%;
+                Rectangle {
+                    TouchArea {
+                        clicked => { root.selected_file = f; }
+                    }
+                    HorizontalLayout {
+                        spacing: 10px;
+                        padding: 5px;
+                        Image {
+                            source: Utils.image_exists(f.thumbnail) ? f.thumbnail : @image-url("assets/file.svg");
+                            colorize: Utils.image_exists(f.thumbnail) ? transparent : Palette.foreground;
+                            vertical-alignment: center;
+                            horizontal-alignment: center;
+                            width: 32px;
+                        }
+                        Text { text: f.path; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
+                        Text { text: Utils.format_bytes(f.size); horizontal-alignment: right; vertical-alignment: center; }
+                    }
+                }
+                Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+            }
+        }
+    }
+
+    if selected_file.path != "": Rectangle {
+        height: 100%;
+        width: 100%;
+
+        VerticalLayout {
+            Text { text: "File: " + selected_file.path; font-weight: 900; overflow: elide; }
+            Text { text: "Size: " + Utils.format_bytes(selected_file.size); }
+            Text { text: "Modified: " + selected_file.modified; }
+            Text { text: "Permissions: " + selected_file.permissions; }
+            Button { text: "Close"; clicked => { root.selected_file = {}; Filesystem.download_thumbnail(thumbnail_index); thumbnail_index += 1; } }
+        }
+    }
+}
+
+component PageFour inherits Page {
+    header: "Files";
+
+    FileListView {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+component BottomBar inherits Rectangle {
+    height: 20px;
+    width: 100%;
+    background: Palette.alternate-background;
+
+    HorizontalLayout {
+        Text {
+            text: "Elegoo is pirating Klipper. Release the source code! https://freethecode.lol/";
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: Palette.alternate-foreground;
+        }
+    }
+}
+
 export component AppWindow inherits Window {
     in-out property <int> current-page: 0;
 
@@ -199,7 +306,7 @@ export component AppWindow inherits Window {
                 IconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
                 IconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
                 IconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3; } foreground: red; }
+                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3; Filesystem.list_files();  } foreground: red; }
             }
 
             Rectangle { 
@@ -208,6 +315,7 @@ export component AppWindow inherits Window {
                 PageOne { visible: root.current-page == 0;  }
                 PageTwo { visible: root.current-page == 1;  }
                 PageThree { visible: root.current-page == 2;  }
+                if root.current-page == 3: PageFour { }
             }
 
             VerticalLayout {
@@ -219,6 +327,10 @@ export component AppWindow inherits Window {
                 IconButton { icon: @image-url("assets/console.svg"); checked: root.current-page == 6; clicked => { root.current-page = 6; } left-side: false; }
                 IconButton { icon: @image-url("assets/settings.svg"); checked: root.current-page == 7; clicked => { root.current-page = 7; } left-side: false; }
             }
+        }
+
+        BottomBar {
+
         }
     }
 /*

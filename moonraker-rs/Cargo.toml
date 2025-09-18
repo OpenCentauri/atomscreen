@@ -12,3 +12,4 @@ tokio = { version = "1", features = ["full"]}
 hyper-util = "0"
 http-body-util = "0"
 optional_struct = "0"
+reqwest = "0"

@@ -13,6 +13,7 @@ clap = { version = "4", features = ["derive"] }
 serde = "1.0"
 tokio = { version = "1", features = ["full"]}
 moonraker-rs = { path = "./moonraker-rs"}
+image = { version = "0", default-features = false, features = ["png"] }
 
 [target.'cfg(unix)'.dependencies]
 evdev = "0"
