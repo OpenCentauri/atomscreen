@@ -469,10 +469,10 @@ impl MoonrakerConnection
             .unwrap();
 
         // Moonraker -> us. TX = ws event bus, RX = misc listeners
-        let (inbound_event_sender, inbound_event_listener) = broadcast::channel::<Arc<GeneralEvent>>(256);
+        let (inbound_event_sender, inbound_event_listener) = broadcast::channel::<Arc<GeneralEvent>>(20);
 
         // Us -> Moonraker. TX = send requests, RX = ws writer
-        let (outbound_event_sender, outbound_event_listener) = broadcast::channel::<Arc<SendingEvent>>(256);
+        let (outbound_event_sender, outbound_event_listener) = broadcast::channel::<Arc<SendingEvent>>(20);
 
         MoonrakerConnection {
             host: host,
