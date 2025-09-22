@@ -3,6 +3,7 @@ use crate::{
     printer_objects::*,
 };
 
+// TODO: Fill cache with configuration for min/max temp
 #[derive(Debug, Default)]
 pub struct Cache {
     pub webhooks: Webhooks,
@@ -16,7 +17,7 @@ pub struct Cache {
     pub virtual_sdcard: VirtualSdcard,
     pub print_stats: PrintStats,
     pub display_status: DisplayStatus,
-    pub temperature_sensors: Vec<NamedTemperatureSensor>,
+    pub temperature_sensors: Vec<NamedTemperatureSensor>, 
     pub temperature_fans: Vec<NamedTemperatureFan>,
     pub filament_switch_sensors: Vec<NamedFilamentSwitchSensor>,
     pub output_pins: Vec<NamedOutputPin>,

@@ -1,8 +1,10 @@
 use optional_struct::*;
 use serde::Deserialize;
 
+use crate::printer_objects::TempControl;
+
 #[optional_struct]
-#[derive(Debug, Deserialize, Default, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Extruder {
     pub temperature: f32,
     pub target: f32,
@@ -11,6 +13,22 @@ pub struct Extruder {
     pub pressure_advance: f32,
     pub smooth_time: f32,
     pub motion_queue: Option<String>,
+    pub temp_control: TempControl
+}
+
+impl Default for Extruder {
+    fn default() -> Self {
+        Self {
+            temperature: 0.0,
+            target: 0.0,
+            power: 0.0,
+            can_extrude: false,
+            pressure_advance: 0.0,
+            smooth_time: 0.0,
+            motion_queue: None,
+            temp_control: TempControl::default_hotend(),
+        }
+    }
 }
 
 impl Extruder {
@@ -35,6 +53,9 @@ impl Extruder {
         }
         if let Some(motion_queue) = extruder.motion_queue {
             self.motion_queue = Some(motion_queue);
+        }
+        if let Some(temp_control) = extruder.temp_control {
+            self.temp_control = temp_control;
         }
     }
 }

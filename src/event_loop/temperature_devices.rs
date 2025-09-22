@@ -24,6 +24,9 @@ impl TemperatureDevicesHandler for EventLoop {
                 name: SharedString::from("extruder"),
                 target: extruder_event.target as i32,
                 temperature: extruder_event.temperature as i32,
+                min_temp: extruder_event.temp_control.min_temp,
+                max_temp: extruder_event.temp_control.max_temp,
+                step: extruder_event.temp_control.step_temp,
             };
 
             self.ui_weak
@@ -34,9 +37,12 @@ impl TemperatureDevicesHandler for EventLoop {
 
         if let PrinterEvent::HeaterBed(heater_bed_event) = printer_event {
             let bed = Heater {
-                name: SharedString::from("heated_bed"),
+                name: SharedString::from("heater_bed"),
                 target: heater_bed_event.target as i32,
                 temperature: heater_bed_event.temperature as i32,
+                min_temp: heater_bed_event.temp_control.min_temp,
+                max_temp: heater_bed_event.temp_control.max_temp,
+                step: heater_bed_event.temp_control.step_temp,
             };
 
             self.ui_weak.upgrade_in_event_loop(move |ui: AppWindow| {
@@ -83,6 +89,9 @@ impl TemperatureDevicesHandler for EventLoop {
                     name: SharedString::from(&temperature_fan_event.name),
                     temperature: temperature_fan_event.fan.temperature as i32,
                     target: temperature_fan_event.fan.target as i32,
+                    min_temp: temperature_fan_event.fan.temp_control.min_temp,
+                    max_temp: temperature_fan_event.fan.temp_control.max_temp,
+                    step: temperature_fan_event.fan.temp_control.step_temp,
                 },
                 speed: temperature_fan_event.fan.speed,
             };

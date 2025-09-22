@@ -7,7 +7,7 @@ use clap::Parser;
 use moonraker_rs::{
     connector::websocket_read::{MoonrakerEvent, PrinterEvent},
     moonraker_connection::WebsocketEvent,
-    requests::FileManagementRequestHandler,
+    requests::{FileManagementRequestHandler, PrinterAdministrationRequestHandler},
 };
 use slint::{Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
@@ -49,6 +49,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let moonraker_connection_clone = moonraker_connection.clone();
     let moonraker_connection_clone_2 = moonraker_connection.clone();
+    let moonraker_connection_clone_3 = moonraker_connection.clone();
 
     let mut receiver = moonraker_connection.get_listener();
 
@@ -191,6 +192,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let value = bytes as f64 / 1024_f64.powi(idx as i32);
 
         SharedString::from(format!("{:.2} {}", value, units[idx]))
+    });
+
+    ui.global::<TemperatureSensors>().on_set_new_target_temperature(move |heater_name, target| {
+        println!("Set new target temperature for {}: {}", heater_name, target);
+        let moonraker_connection = moonraker_connection_clone_3.clone();
+        slint::spawn_local(async move {
+            let heater_name = heater_name.to_string();
+            // TODO: Double check if this works with temperature_fan's
+            let moonraker_connection = moonraker_connection.clone();
+            let command = format!("SET_HEATER_TEMPERATURE HEATER={} TARGET={}", heater_name, target);
+            moonraker_connection.run_gcode_script(&command).await.expect("Failed to set heater temperature");
+        })
+        .unwrap();
     });
 
     tokio::task::block_in_place(|| {

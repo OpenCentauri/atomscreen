@@ -12,6 +12,7 @@ pub trait PrinterAdministrationRequestHandler {
         &self,
         objects: Vec<String>,
     ) -> Result<PrinterObjectsSubscribeResult, Error>;
+    async fn run_gcode_script(&self, script: &str) -> Result<String, Error>;
 }
 
 impl PrinterAdministrationRequestHandler for MoonrakerConnection {
@@ -34,6 +35,11 @@ impl PrinterAdministrationRequestHandler for MoonrakerConnection {
 
         self.send_request("printer.objects.subscribe", Some(args))
             .await
+    }
+    
+    async fn run_gcode_script(&self, script: &str) -> Result<String, Error> {
+        let args = serde_json::json!({ "script": script });
+        self.send_request("printer.gcode.script", Some(args)).await
     }
 }
 

@@ -15,6 +15,7 @@ pub mod temperature_sensor;
 pub mod toolhead;
 pub mod virtual_sdcard;
 pub mod webhooks;
+pub mod temp_control;
 
 pub use display_status::*;
 pub use exclude_object::*;
@@ -33,3 +34,4 @@ pub use temperature_sensor::*;
 pub use toolhead::*;
 pub use virtual_sdcard::*;
 pub use webhooks::*;
+pub use temp_control::*;

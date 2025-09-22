@@ -9,6 +9,9 @@ export struct Heater
     name: string,
     temperature: int,
     target: int,
+    min_temp: int,
+    max_temp: int,
+    step: int,
 }
 
 export struct HeaterFan
@@ -23,4 +26,6 @@ export global TemperatureSensors
     in-out property<[HeaterFan]> heater_fans;
     in-out property<Heater> extruder;
     in-out property<Heater> heated_bed;
+
+    callback set_new_target_temperature(heater_name: string, target: int);
 }

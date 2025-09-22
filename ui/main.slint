@@ -1,7 +1,7 @@
-import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView } from "std-widgets.slint";
+import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
 //import { VirtualKeyboard } from "virtual_keyboard.slint";
 import "../Figtree-Regular.ttf";
-import { TemperatureSensors} from "state.slint";
+import { TemperatureSensors, Heater } from "state.slint";
 export * from "state.slint";
 
 component Page inherits Rectangle {
@@ -255,6 +255,118 @@ component FileListView inherits Rectangle
     }
 }
 
+component InteractableTemperatureElement {
+    in-out property <Heater> heater;
+    property <int> target: heater.target;
+
+    changed heater => {
+        target = heater.target;
+    }
+
+    VerticalLayout {
+        HorizontalLayout {
+            height: 40px;
+            spacing: 10px;
+
+            Image {
+                colorize: Palette.foreground;
+                source: heater.name == "extruder"
+                    ? @image-url("assets/extruder.svg")
+                    : heater.name == "heated_bed"
+                        ? @image-url("assets/bed.svg")
+                        : @image-url("assets/fan.svg"); // TODO: Do temp sensor
+            }
+
+            Text {
+                text: heater.name == "extruder"
+                    ? "Extruder"
+                    : heater.name == "heater_bed"
+                        ? "Heated Bed"
+                        : heater.name;
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Text {
+                text: target > 0
+                    ? heater.temperature + "°C -> " + target + "°C"
+                    : heater.temperature + "°C";
+                vertical-alignment: center;
+                font-weight: 900;
+            }
+        }
+        HorizontalLayout {
+            spacing: 10px;
+            height: 35px;
+            padding-bottom: 10px;
+            Button {
+                horizontal-stretch: 0;
+                text: "Off";
+                clicked => { 
+                    TemperatureSensors.set_new_target_temperature(heater.name, 0);
+                }   
+            }
+            Text {
+                text: heater.min-temp + "°C";
+                vertical-alignment: center;
+            }
+            if heater.target < heater.min-temp: Slider {
+                value: heater.min-temp;
+                minimum: heater.min-temp;
+                maximum: heater.max-temp;
+                step: heater.step;
+                horizontal-stretch: 1;
+
+                changed(value) => {
+                    target = floor(value / heater.step) * heater.step;
+                }
+
+                released(value) => {
+                    debug("Released at value: ", floor(value / heater.step) * heater.step);
+                    TemperatureSensors.set_new_target_temperature(heater.name, floor(value / heater.step) * heater.step);
+                }
+            }
+            if heater.target >= heater.min-temp: Slider {
+                value: heater.target;
+                minimum: heater.min-temp;
+                maximum: heater.max-temp;
+                step: heater.step;
+                horizontal-stretch: 1;
+
+                changed(value) => {
+                    target = floor(value / heater.step) * heater.step;
+                }
+
+                released(value) => {
+                    debug("Released at value: ", floor(value / heater.step) * heater.step);
+                    TemperatureSensors.set_new_target_temperature(heater.name, floor(value / heater.step) * heater.step);
+                }
+            }
+            Text {
+                text: heater.max-temp + "°C";
+                vertical-alignment: center;
+            }
+        }
+        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+    }
+}
+
+component TemperaturePage inherits Page {
+    header: "Temperature";
+
+
+    ScrollView {
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            InteractableTemperatureElement { heater: TemperatureSensors.extruder; }
+            InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; }
+            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater; }
+        }
+    }
+}
+
 component PageFour inherits Page {
     header: "Files";
 
@@ -303,8 +415,9 @@ component MainView
                 horizontal-stretch: 1;
 
                 //PageOne { visible: root.current-page == 0;  }
-                PageTwo { visible: root.current-page == 1;  }
+                //PageTwo { visible: root.current-page == 1;  }
                 PageThree { visible: root.current-page == 2;  }
+                if root.current-page == 1: TemperaturePage { }
                 if root.current-page == 0: PageFour { }
             }
 
