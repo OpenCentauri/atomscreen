@@ -5,3 +5,7 @@ height = 272
 [moonraker]
 host = "localhost"
 port = 7125
+
+[heater_presets]
+extruder = [ 200, 240, 280 ]
+heater_bed = [ 60, 70 ]

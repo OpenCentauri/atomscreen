@@ -5,9 +5,7 @@ use std::{cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc,
 
 use clap::Parser;
 use moonraker_rs::{
-    connector::websocket_read::{MoonrakerEvent, PrinterEvent},
-    moonraker_connection::WebsocketEvent,
-    requests::{FileManagementRequestHandler, PrinterAdministrationRequestHandler},
+    cache::Cache, connector::{read_deserialize::OptionalPrinterEvent, websocket_read::{MoonrakerEvent, PrinterEvent}}, moonraker_connection::WebsocketEvent, printer_objects::{NamedOptionalTemperatureFan, OptionalExtruder, OptionalHeaterBed, OptionalTemperatureFan, TemperatureConfiguration}, requests::{FileManagementRequestHandler, PrinterAdministrationRequestHandler}
 };
 use slint::{Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
@@ -34,11 +32,37 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let config_str = fs::read_to_string(&config_path).unwrap();
     let config = toml::from_str::<config::Config>(&config_str).unwrap();
     let moonraker_config = config.moonraker.unwrap_or(MoonrakerConfig::default());
+    let mut cache = Cache::default();
+
+    if let Some(heater_presets) = config.heater_presets {
+        for (name, preset) in heater_presets {
+            if name == "extruder" {
+                cache.complete_event(OptionalPrinterEvent::Extruder(OptionalExtruder {
+                    configuration: Some(TemperatureConfiguration::from(preset)),
+                    ..Default::default()
+                }));
+            } else if name == "heater_bed" {
+                cache.complete_event(OptionalPrinterEvent::HeaterBed(OptionalHeaterBed {
+                    configuration: Some(TemperatureConfiguration::from(preset)),
+                    ..Default::default()
+                }));
+            } else {
+                cache.complete_event(OptionalPrinterEvent::TemperatureFan(NamedOptionalTemperatureFan {
+                    name: name,
+                    fan: OptionalTemperatureFan {
+                        configuration: Some(TemperatureConfiguration::from(preset)),
+                        ..Default::default()
+                    }
+                }));
+            }
+        }
+    }
 
     let moonraker_connection = Arc::new(
         moonraker_rs::moonraker_connection::MoonrakerConnection::new(
             &moonraker_config.host,
             moonraker_config.port,
+            Some(cache),
         ),
     );
     let ui = init_display(&config.display)?;

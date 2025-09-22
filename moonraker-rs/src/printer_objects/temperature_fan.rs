@@ -1,7 +1,7 @@
 use optional_struct::*;
 use serde::Deserialize;
 
-use crate::printer_objects::TempControl;
+use crate::printer_objects::TemperatureConfiguration;
 
 #[optional_struct]
 #[derive(Debug, Deserialize, Clone)]
@@ -10,7 +10,7 @@ pub struct TemperatureFan {
     pub rpm: Option<f32>,
     pub temperature: f32,
     pub target: f32,
-    pub temp_control: TempControl
+    pub configuration: TemperatureConfiguration
 }
 
 impl Default for TemperatureFan {
@@ -20,7 +20,7 @@ impl Default for TemperatureFan {
             rpm: None,
             temperature: 0.0,
             target: 0.0,
-            temp_control: TempControl::default_fan(),
+            configuration: TemperatureConfiguration::default_fan(),
         }
     }
 }
@@ -51,8 +51,8 @@ impl TemperatureFan {
         if let Some(target) = fan.target {
             self.target = target;
         }
-        if let Some(temp_control) = fan.temp_control {
-            self.temp_control = temp_control;
+        if let Some(configuration) = fan.configuration {
+            self.configuration = configuration;
         }
     }
 }

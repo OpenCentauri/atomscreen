@@ -1,5 +1,5 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
-//import { VirtualKeyboard } from "virtual_keyboard.slint";
+import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../Figtree-Regular.ttf";
 import { TemperatureSensors, Heater } from "state.slint";
 export * from "state.slint";
@@ -255,13 +255,61 @@ component FileListView inherits Rectangle
     }
 }
 
+component SmallButton inherits Rectangle {
+    in property <string> text;
+    callback clicked();
+
+    background: Palette.control-background;
+    border-radius: 20px;
+
+    states [
+        pressed when touch-area.pressed : {
+            state-area.opacity: 0.5;
+        }
+    ]
+
+    GridLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+    
+        Rectangle {
+            touch-area := TouchArea {
+                clicked => { root.clicked(); }
+            }
+
+            Text {
+                text: root.text;
+                color: Palette.control-foreground;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                font-size: 12px;
+            }
+        }
+    }
+
+    state-area := Rectangle {
+        border-radius: root.border-radius;
+        opacity: 0;
+        background: #000000;
+
+        animate opacity { duration: 30ms; }
+    }
+}
+
 component InteractableTemperatureElement {
     in-out property <Heater> heater;
     property <int> target: heater.target;
+    property <string> friendly_name: heater.name == "extruder"
+                    ? "Extruder"
+                    : heater.name == "heater_bed"
+                        ? "Heated Bed"
+                        : heater.name;
 
     changed heater => {
         target = heater.target;
     }
+
+    callback on_manual_entry(internal_name: string, friendly_name: string);
 
     VerticalLayout {
         HorizontalLayout {
@@ -272,17 +320,13 @@ component InteractableTemperatureElement {
                 colorize: Palette.foreground;
                 source: heater.name == "extruder"
                     ? @image-url("assets/extruder.svg")
-                    : heater.name == "heated_bed"
+                    : heater.name == "heater_bed"
                         ? @image-url("assets/bed.svg")
                         : @image-url("assets/fan.svg"); // TODO: Do temp sensor
             }
 
             Text {
-                text: heater.name == "extruder"
-                    ? "Extruder"
-                    : heater.name == "heater_bed"
-                        ? "Heated Bed"
-                        : heater.name;
+                text: friendly_name;
                 horizontal-stretch: 1;
                 vertical-alignment: center;
                 overflow: elide;
@@ -298,72 +342,135 @@ component InteractableTemperatureElement {
         }
         HorizontalLayout {
             spacing: 10px;
-            height: 35px;
+            height: 40px;
             padding-bottom: 10px;
-            Button {
-                horizontal-stretch: 0;
+            SmallButton {
                 text: "Off";
                 clicked => { 
                     TemperatureSensors.set_new_target_temperature(heater.name, 0);
                 }   
             }
-            Text {
-                text: heater.min-temp + "°C";
-                vertical-alignment: center;
+            for preset in heater.presets : SmallButton {
+                text: preset + "°C";
+                clicked => { 
+                    TemperatureSensors.set_new_target_temperature(heater.name, preset);
+                }   
             }
-            if heater.target < heater.min-temp: Slider {
-                value: heater.min-temp;
-                minimum: heater.min-temp;
-                maximum: heater.max-temp;
-                step: heater.step;
-                horizontal-stretch: 1;
-
-                changed(value) => {
-                    target = floor(value / heater.step) * heater.step;
+            SmallButton {
+                text: "Set";
+                clicked => { 
+                    on_manual_entry(heater.name, friendly_name);
                 }
-
-                released(value) => {
-                    debug("Released at value: ", floor(value / heater.step) * heater.step);
-                    TemperatureSensors.set_new_target_temperature(heater.name, floor(value / heater.step) * heater.step);
-                }
-            }
-            if heater.target >= heater.min-temp: Slider {
-                value: heater.target;
-                minimum: heater.min-temp;
-                maximum: heater.max-temp;
-                step: heater.step;
-                horizontal-stretch: 1;
-
-                changed(value) => {
-                    target = floor(value / heater.step) * heater.step;
-                }
-
-                released(value) => {
-                    debug("Released at value: ", floor(value / heater.step) * heater.step);
-                    TemperatureSensors.set_new_target_temperature(heater.name, floor(value / heater.step) * heater.step);
-                }
-            }
-            Text {
-                text: heater.max-temp + "°C";
-                vertical-alignment: center;
             }
         }
         Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
     }
 }
 
+component NumberPad inherits Rectangle 
+{
+    in property <string> name;
+    callback accept(number: int);
+    callback cancel();
+    property <int> current-number: 0;
+
+    function add(key: int) {
+        if (current-number > 1000) {
+            return;
+        }
+
+        current-number = current-number * 10 + key;        
+    }
+
+    function remove() {
+        current-number = floor(current-number / 10);
+    }
+
+    VerticalLayout {
+        spacing: 5px;
+        
+        HorizontalLayout {
+            spacing: 5px;
+            vertical-stretch: 1;
+            
+            Text {
+                text: name + ": " + current-number;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                font-size: 20px;
+                font-weight: 900;
+                horizontal-stretch: 5;
+            }
+
+            VirtualKeyboardButton { icon: @image-url("assets/backspace.svg"); key-pressed => { remove(); } horizontal-stretch: 1; }
+        }
+
+        HorizontalLayout {
+            spacing: 5px;
+            vertical-stretch: 1;
+            VirtualKeyboardButton { key: "1"; key-pressed => { add(1) } }
+            VirtualKeyboardButton { key: "2"; key-pressed => { add(2) } }
+            VirtualKeyboardButton { key: "3"; key-pressed => { add(3) } }
+            VirtualKeyboardButton { icon: @image-url("assets/check.svg"); key-pressed => { accept(current-number); current-number = 0; } }
+        }
+
+        HorizontalLayout {
+            spacing: 5px;
+            vertical-stretch: 1;
+            VirtualKeyboardButton { key: "4"; key-pressed => { add(4) } }
+            VirtualKeyboardButton { key: "5"; key-pressed => { add(5) } }
+            VirtualKeyboardButton { key: "6"; key-pressed => { add(6) } }
+            VirtualKeyboardButton { icon: @image-url("assets/close.svg"); key-pressed => { cancel(); } }
+        }
+
+        HorizontalLayout {
+            spacing: 5px;
+            vertical-stretch: 1;
+            VirtualKeyboardButton { key: "7"; key-pressed => { add(7) } }
+            VirtualKeyboardButton { key: "8"; key-pressed => { add(8) } }
+            VirtualKeyboardButton { key: "9"; key-pressed => { add(9) } }
+            VirtualKeyboardButton { key: "0"; key-pressed => { add(0) } }
+        }
+    }
+}
+
 component TemperaturePage inherits Page {
     header: "Temperature";
+    property <bool> is_keyboard_open: false;
+    property <string> internal_temp_device_name;
+    property <string> friendly_temp_device_name;
 
+    if is_keyboard_open: GridLayout {
+        padding-left: StyleMetrics.layout-padding / 2;
+        padding-right: StyleMetrics.layout-padding / 2;
+        NumberPad {
+            name: friendly_temp_device_name;
+            accept(number) => {
+                TemperatureSensors.set_new_target_temperature(internal_temp_device_name, number);
+                is_keyboard_open = false;
+            }
+            cancel() => {
+                is_keyboard_open = false;
+            }
+        }
+    }
+
+    function open_keyboard(internal_name: string, friendly_name: string) {
+        internal_temp_device_name = internal_name;
+        friendly_temp_device_name = friendly_name;
+        is_keyboard_open = true;
+    }
 
     ScrollView {
         VerticalLayout {
             padding-left: 20px;
             padding-right: 20px;
-            InteractableTemperatureElement { heater: TemperatureSensors.extruder; }
-            InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; }
-            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater; }
+            InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }  }
+            InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }}
+            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); } }
         }
+
+        visible: !is_keyboard_open;
     }
 }
 
@@ -439,8 +546,6 @@ component MainView
 }
 
 export component AppWindow inherits Window {
-    
-
     width: 480px;
     height: 272px;
 

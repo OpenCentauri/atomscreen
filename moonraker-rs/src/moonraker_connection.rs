@@ -71,10 +71,11 @@ pub struct MoonrakerConnection {
     outbound_event_sender: Sender<Arc<OutboundMessage>>,
     outbound_event_listener: Receiver<Arc<OutboundMessage>>,
     incrementing_id: Mutex<u32>,
+    preconfigured_cache: Option<Cache>,
 }
 
 impl MoonrakerConnection {
-    pub fn new(host: &str, port: u16) -> Self {
+    pub fn new(host: &str, port: u16, preconfigured_cache : Option<Cache>) -> Self {
         let host = format!("{}:{}", host, port);
 
         let req = Request::builder()
@@ -107,6 +108,7 @@ impl MoonrakerConnection {
             outbound_event_sender: outbound_event_sender,
             outbound_event_listener: outbound_event_listener,
             incrementing_id: Mutex::new(1),
+            preconfigured_cache
         }
     }
 
@@ -126,7 +128,7 @@ impl MoonrakerConnection {
                 .expect("Failed to internally send a disconnect event");
             let reader;
             let writer;
-            let cache = Arc::new(Mutex::new(Cache::new()));
+            let cache = Arc::new(Mutex::new(self.preconfigured_cache.clone().unwrap_or_default()));
 
             match self.reconnect().await {
                 Ok((r, w)) => {

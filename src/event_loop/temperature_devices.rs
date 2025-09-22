@@ -20,33 +20,29 @@ impl TemperatureDevicesHandler for EventLoop {
         printer_event: &PrinterEvent,
     ) -> Result<(), ApplicationError> {
         if let PrinterEvent::Extruder(extruder_event) = printer_event {
-            let extruder = Heater {
-                name: SharedString::from("extruder"),
-                target: extruder_event.target as i32,
-                temperature: extruder_event.temperature as i32,
-                min_temp: extruder_event.temp_control.min_temp,
-                max_temp: extruder_event.temp_control.max_temp,
-                step: extruder_event.temp_control.step_temp,
-            };
-
+            let extruder_event = extruder_event.clone();
+            
             self.ui_weak
                 .upgrade_in_event_loop(Box::new(move |ui: AppWindow| {
-                    ui.global::<TemperatureSensors>().set_extruder(extruder)
+                    ui.global::<TemperatureSensors>().set_extruder(Heater {
+                        name: SharedString::from("extruder"),
+                        target: extruder_event.target as i32,
+                        temperature: extruder_event.temperature as i32,
+                        presets: ModelRc::new(Rc::new(VecModel::from(extruder_event.configuration.presets.iter().map(|f| *f as i32).collect::<Vec<i32>>()))),
+                    })
                 }))?;
         }
 
         if let PrinterEvent::HeaterBed(heater_bed_event) = printer_event {
-            let bed = Heater {
-                name: SharedString::from("heater_bed"),
-                target: heater_bed_event.target as i32,
-                temperature: heater_bed_event.temperature as i32,
-                min_temp: heater_bed_event.temp_control.min_temp,
-                max_temp: heater_bed_event.temp_control.max_temp,
-                step: heater_bed_event.temp_control.step_temp,
-            };
+            let heater_bed_event = heater_bed_event.clone();
 
             self.ui_weak.upgrade_in_event_loop(move |ui: AppWindow| {
-                ui.global::<TemperatureSensors>().set_heated_bed(bed)
+                ui.global::<TemperatureSensors>().set_heated_bed(Heater {
+                    name: SharedString::from("heater_bed"),
+                    target: heater_bed_event.target as i32,
+                    temperature: heater_bed_event.temperature as i32,
+                    presets: ModelRc::new(Rc::new(VecModel::from(heater_bed_event.configuration.presets.iter().map(|f| *f as i32).collect::<Vec<i32>>()))),
+                })
             })?;
         }
 
@@ -84,17 +80,8 @@ impl TemperatureDevicesHandler for EventLoop {
         }
 
         if let PrinterEvent::TemperatureFan(temperature_fan_event) = printer_event {
-            let sensor_event = HeaterFan {
-                heater: Heater {
-                    name: SharedString::from(&temperature_fan_event.name),
-                    temperature: temperature_fan_event.fan.temperature as i32,
-                    target: temperature_fan_event.fan.target as i32,
-                    min_temp: temperature_fan_event.fan.temp_control.min_temp,
-                    max_temp: temperature_fan_event.fan.temp_control.max_temp,
-                    step: temperature_fan_event.fan.temp_control.step_temp,
-                },
-                speed: temperature_fan_event.fan.speed,
-            };
+            let temperature_fan_event = temperature_fan_event.clone();
+
 
             self.ui_weak
                 .upgrade_in_event_loop(move |ui| {
@@ -107,6 +94,16 @@ impl TemperatureDevicesHandler for EventLoop {
                     let mut entries = match &current_sensors {
                         Some(model) => model.iter().collect::<Vec<HeaterFan>>(),
                         None => vec![],
+                    };
+
+                    let sensor_event = HeaterFan {
+                        heater: Heater {
+                            name: SharedString::from(&temperature_fan_event.name),
+                            temperature: temperature_fan_event.fan.temperature as i32,
+                            target: temperature_fan_event.fan.target as i32,
+                            presets: ModelRc::new(Rc::new(VecModel::from(temperature_fan_event.fan.configuration.presets.iter().map(|f| *f as i32).collect::<Vec<i32>>())))
+                        },
+                        speed: temperature_fan_event.fan.speed,
                     };
 
                     let index = entries

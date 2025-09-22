@@ -5,7 +5,7 @@ import { Button, Palette } from "std-widgets.slint";
 
 import { Icons } from "icons.slint";
 
-component VirtualKeyboardButton {
+export component VirtualKeyboardButton {
     in property <string> key;
     in property <image> icon;
 
@@ -13,7 +13,7 @@ component VirtualKeyboardButton {
 
     min-width: 32px;
     //min-height: 32px;
-    height: 28px;
+    //height: 28px;
     horizontal-stretch: 0;
 
     states [
@@ -23,25 +23,26 @@ component VirtualKeyboardButton {
     ]
 
     i-container := Rectangle {
-        border-radius: 4px;
-        background: Palette.color-scheme == ColorScheme.dark ? #373737 : #ffffff;
+        border-radius: 20px;
+        background: Palette.control-background;
 
         HorizontalLayout {
             padding: 8px;
+            Rectangle {
+                if (root.key != "") : Text {
+                    text: root.key;
+                    color: Palette.control-foreground;
+                    font-size: 12px;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                }
 
-            if (root.key != "") : Text {
-                text: root.key;
-                color: Palette.color-scheme == ColorScheme.dark ? #ffffff : #000000;
-                font-size: 12px;
-                vertical-alignment: center;
-                horizontal-alignment: center;
-            }
-
-            if (root.key == "") : Image {
-                y: (parent.height - self.height) / 2;
-                source: root.icon;
-                height: 12px;
-                colorize: Palette.color-scheme == ColorScheme.dark ? #ffffff : #000000;
+                if (root.key == "") : Image {
+                    vertical-alignment: center;
+                    source: root.icon;
+                    height: 12px;
+                    colorize: Palette.control-foreground;
+                }
             }
         }
     }

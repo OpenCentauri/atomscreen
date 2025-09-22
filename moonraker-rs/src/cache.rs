@@ -4,7 +4,7 @@ use crate::{
 };
 
 // TODO: Fill cache with configuration for min/max temp
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Cache {
     pub webhooks: Webhooks,
     pub motion_report: MotionReport,

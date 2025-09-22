@@ -1,7 +1,7 @@
 use optional_struct::*;
 use serde::Deserialize;
 
-use crate::printer_objects::TempControl;
+use crate::printer_objects::TemperatureConfiguration;
 
 #[optional_struct]
 #[derive(Debug, Deserialize, Clone)]
@@ -9,7 +9,7 @@ pub struct HeaterBed {
     pub temperature: f32,
     pub target: f32,
     pub power: f32,
-    pub temp_control: TempControl,
+    pub configuration: TemperatureConfiguration,
 }
 
 impl Default for HeaterBed {
@@ -18,7 +18,7 @@ impl Default for HeaterBed {
             temperature: 0.0,
             target: 0.0,
             power: 0.0,
-            temp_control: TempControl::default_bed(),
+            configuration: TemperatureConfiguration::default_bed(),
         }
     }
 }
@@ -34,8 +34,8 @@ impl HeaterBed {
         if let Some(power) = heater_bed.power {
             self.power = power;
         }
-        if let Some(temp_control) = heater_bed.temp_control {
-            self.temp_control = temp_control;
+        if let Some(configuration) = heater_bed.configuration {
+            self.configuration = configuration;
         }
     }
 }
