@@ -3,7 +3,6 @@
 
 use std::{
     cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc, sync::Arc,
-    time::Duration,
 };
 
 use clap::Parser;
@@ -13,12 +12,12 @@ use moonraker_rs::{
     requests::FileManagementRequestHandler,
 };
 use slint::{
-    Image, Model, ModelRc, PlatformError, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString,
+    Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString,
     VecModel,
 };
 use tokio::sync::Mutex;
 
-use crate::{application_error::ApplicationError, config::MoonrakerConfig, hardware::init_display};
+use crate::{config::MoonrakerConfig, hardware::init_display};
 
 mod application_error;
 mod config;
@@ -229,7 +228,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let f = ui.global::<Filesystem>().get_files();
                 let files = f.as_any().downcast_ref::<VecModel<MoonrakerFileTest>>();
 
-                let mut non_optional_files = match files {
+                let non_optional_files = match files {
                     Some(files) => files,
                     None => return,
                 };
