@@ -1,14 +1,28 @@
 // Based on https://github.com/nilclass/slint-framebuffer-example
 
-use std::{cell::RefCell, rc::Rc, sync::{Arc, Mutex}, time::{Duration, Instant}, collections::VecDeque};
 use evdev::Device;
 use linuxfb::{double::Buffer, Framebuffer};
-use slint::{platform::{software_renderer::{MinimalSoftwareWindow, PremultipliedRgbaColor, RepaintBufferType, Rgb565Pixel, TargetPixel}, EventLoopProxy, Platform, WindowEvent}, EventLoopError, PhysicalSize, PlatformError, Rgb8Pixel};
+use slint::{
+    platform::{
+        software_renderer::{
+            MinimalSoftwareWindow, PremultipliedRgbaColor, RepaintBufferType, Rgb565Pixel,
+            TargetPixel,
+        },
+        EventLoopProxy, Platform, WindowEvent,
+    },
+    EventLoopError, PhysicalSize, PlatformError, Rgb8Pixel,
+};
+use std::{
+    cell::RefCell,
+    collections::VecDeque,
+    rc::Rc,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
 use crate::hardware::EvdevMtTouchPlatform;
 
-pub trait TouchPlatform
-{
+pub trait TouchPlatform {
     fn process_touch_events(&self) -> Vec<WindowEvent>;
 }
 
@@ -24,7 +38,7 @@ pub struct FramebufferPlatform {
 }
 
 impl FramebufferPlatform {
-    pub fn new(fb : Framebuffer, touch_device : Option<Device>) -> Self {
+    pub fn new(fb: Framebuffer, touch_device: Option<Device>) -> Self {
         let size = fb.get_size();
         let bytes_per_pixel = fb.get_bytes_per_pixel();
         let physical_size = fb.get_physical_size();
@@ -45,7 +59,7 @@ impl FramebufferPlatform {
         } else {
             println!("No input device configured");
         }
-        
+
         let window = MinimalSoftwareWindow::new(RepaintBufferType::SwappedBuffers);
         window.set_size(PhysicalSize::new(size.0, size.1));
 
@@ -81,16 +95,28 @@ impl TargetPixel for PremultipliedAbgrColor {
     }
 
     fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        Self { red: r, green: g, blue: b, alpha: 255 }
+        Self {
+            red: r,
+            green: g,
+            blue: b,
+            alpha: 255,
+        }
     }
 
     fn background() -> Self {
-        Self { red: 0, green: 0, blue: 0, alpha: 0 }
+        Self {
+            red: 0,
+            green: 0,
+            blue: 0,
+            alpha: 0,
+        }
     }
 }
 
 impl Platform for FramebufferPlatform {
-    fn create_window_adapter(&self) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
+    fn create_window_adapter(
+        &self,
+    ) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
         Ok(self.window.clone())
     }
 
@@ -119,14 +145,12 @@ impl Platform for FramebufferPlatform {
                 None => {}
             }
 
-            if let Some(touch_device) = &self.touch_device
-            {
+            if let Some(touch_device) = &self.touch_device {
                 let now = Instant::now();
                 let events = touch_device.process_touch_events();
                 let elapsed = now.elapsed();
 
-                for event in events
-                {
+                for event in events {
                     //println!("Got event {:?}", event);
                     //println!("Elapsed: {:.2?}", elapsed);
                     self.window.try_dispatch_event(event).unwrap();
@@ -134,7 +158,7 @@ impl Platform for FramebufferPlatform {
             }
 
             self.window.draw_if_needed(|renderer| {
-                let frame: &mut[u8] = fb.as_mut_slice();
+                let frame: &mut [u8] = fb.as_mut_slice();
                 if self.bytes_per_pixel == 2 {
                     let (_, pixels, _) = unsafe { frame.align_to_mut::<Rgb565Pixel>() };
                     renderer.render(pixels, self.stride);
@@ -153,7 +177,10 @@ impl Platform for FramebufferPlatform {
             });
 
             if !self.window.has_active_animations() {
-                std::thread::park_timeout(slint::platform::duration_until_next_timer_update().unwrap_or(Duration::from_millis(20)));
+                std::thread::park_timeout(
+                    slint::platform::duration_until_next_timer_update()
+                        .unwrap_or(Duration::from_millis(20)),
+                );
             }
         }
         Ok(())

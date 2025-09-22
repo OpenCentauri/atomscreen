@@ -1,24 +1,26 @@
-use std::cell::RefCell;
-use std::fmt::Debug;
-use std::sync::Arc;
-use std::{error::Error};
+use crate::cache::Cache;
+use crate::connector::websocket_read::{MoonrakerEvent, moonraker_reader_connection_loop};
+use crate::connector::websocket_write::{
+    MoonrakerRequest, OutboundMessage, moonraker_writer_connection_loop,
+};
+use crate::requests::PrinterAdministrationRequestHandler;
+use fastwebsockets::{FragmentCollector, WebSocket, handshake};
 use fastwebsockets::{FragmentCollectorRead, Frame, OpCode, Payload, WebSocketWrite};
-use fastwebsockets::{handshake, FragmentCollector, WebSocket};
 use http_body_util::Empty;
 use hyper::rt::Executor;
-use hyper::{body::Bytes, header, upgrade::Upgraded, Request};
+use hyper::{Request, body::Bytes, header, upgrade::Upgraded};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::cell::RefCell;
+use std::error::Error;
+use std::fmt::Debug;
+use std::sync::Arc;
 use tokio::io::{ReadHalf, WriteHalf};
 use tokio::net::TcpStream;
 use tokio::sync::broadcast::{Receiver, Sender};
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::{Mutex, broadcast};
 use tokio::time::sleep;
-use crate::cache::Cache;
-use crate::connector::websocket_read::{moonraker_reader_connection_loop, MoonrakerEvent};
-use crate::connector::websocket_write::{moonraker_writer_connection_loop, MoonrakerRequest, OutboundMessage};
-use crate::requests::PrinterAdministrationRequestHandler;
 
 use super::printer_objects::*;
 use hyper_util::rt::TokioIo;
@@ -27,19 +29,18 @@ struct SpawnExecutor;
 
 impl<Fut> hyper::rt::Executor<Fut> for SpawnExecutor
 where
-  Fut: Future + Send + 'static,
-  Fut::Output: Send + 'static,
+    Fut: Future + Send + 'static,
+    Fut::Output: Send + 'static,
 {
-  fn execute(&self, fut: Fut) {
-    tokio::task::spawn(fut);
-  }
+    fn execute(&self, fut: Fut) {
+        tokio::task::spawn(fut);
+    }
 }
 
 #[derive(Debug)]
-pub struct MoonrakerReply 
-{
+pub struct MoonrakerReply {
     pub id: u32,
-    pub result: serde_json::Value // TODO: Make type safe (by checking method name)
+    pub result: serde_json::Value, // TODO: Make type safe (by checking method name)
 }
 
 #[derive(Debug)]
@@ -51,13 +52,11 @@ pub enum WebsocketEvent {
     MoonrakerReply(MoonrakerReply),
 }
 
-pub struct PrinterObjectsSubscribeParams
-{
+pub struct PrinterObjectsSubscribeParams {
     pub objects: serde_json::Map<String, Value>,
 }
 
-impl PrinterObjectsSubscribeParams
-{
+impl PrinterObjectsSubscribeParams {
     pub fn all_fields(objects: Vec<String>) -> Self {
         let mut map = serde_json::Map::new();
         for object in objects {
@@ -67,19 +66,17 @@ impl PrinterObjectsSubscribeParams
     }
 }
 
-pub struct MoonrakerConnection
-{
+pub struct MoonrakerConnection {
     host: String,
     request: Request<Empty<Bytes>>,
-    inbound_event_sender : Sender<Arc<WebsocketEvent>>,
+    inbound_event_sender: Sender<Arc<WebsocketEvent>>,
     inbound_event_listener: Receiver<Arc<WebsocketEvent>>,
-    outbound_event_sender : Sender<Arc<OutboundMessage>>,
+    outbound_event_sender: Sender<Arc<OutboundMessage>>,
     outbound_event_listener: Receiver<Arc<OutboundMessage>>,
     incrementing_id: Mutex<u32>,
 }
 
-impl MoonrakerConnection
-{
+impl MoonrakerConnection {
     pub fn new(host: &str, port: u16) -> Self {
         let host = format!("{}:{}", host, port);
         let url = format!("ws://{}/websocket", host);
@@ -91,18 +88,20 @@ impl MoonrakerConnection
             .header(header::UPGRADE, "websocket")
             .header(header::CONNECTION, "upgrade")
             .header(
-            "Sec-WebSocket-Key",
-            fastwebsockets::handshake::generate_key(),
+                "Sec-WebSocket-Key",
+                fastwebsockets::handshake::generate_key(),
             )
             .header("Sec-WebSocket-Version", "13")
             .body(Empty::<Bytes>::new())
             .unwrap();
 
         // Moonraker -> us. TX = ws event bus, RX = misc listeners
-        let (inbound_event_sender, inbound_event_listener) = broadcast::channel::<Arc<WebsocketEvent>>(20);
+        let (inbound_event_sender, inbound_event_listener) =
+            broadcast::channel::<Arc<WebsocketEvent>>(20);
 
         // Us -> Moonraker. TX = send requests, RX = ws writer
-        let (outbound_event_sender, outbound_event_listener) = broadcast::channel::<Arc<OutboundMessage>>(20);
+        let (outbound_event_sender, outbound_event_listener) =
+            broadcast::channel::<Arc<OutboundMessage>>(20);
 
         MoonrakerConnection {
             host: host,
@@ -123,11 +122,12 @@ impl MoonrakerConnection
     }
 
     pub async fn connection_loop(&self) {
-        loop 
-        {
+        loop {
             // TODO: Kill old threads if they exist
             let inbound_sender = self.inbound_event_sender.clone();
-            inbound_sender.send(Arc::new(WebsocketEvent::Disconnected)).expect("Failed to internally send a disconnect event");
+            inbound_sender
+                .send(Arc::new(WebsocketEvent::Disconnected))
+                .expect("Failed to internally send a disconnect event");
             let reader;
             let writer;
             let cache = Arc::new(Mutex::new(Cache::new()));
@@ -150,7 +150,13 @@ impl MoonrakerConnection
                 let outbound_sender = self.outbound_event_sender.clone();
                 let cache = cache.clone();
                 tokio::spawn(async move {
-                    moonraker_reader_connection_loop(inbound_sender, outbound_sender, reader, cache).await;
+                    moonraker_reader_connection_loop(
+                        inbound_sender,
+                        outbound_sender,
+                        reader,
+                        cache,
+                    )
+                    .await;
                 })
             };
 
@@ -172,7 +178,9 @@ impl MoonrakerConnection
             };
 
             // TOOD: Don't subscribe to objects we don't have a use for.
-            let initial_objects = self.subscribe_to_printer_objects(object_list.objects.clone()).await;
+            let initial_objects = self
+                .subscribe_to_printer_objects(object_list.objects.clone())
+                .await;
             if let Err(e) = initial_objects {
                 eprintln!("Error subscribing to printer objects: {}", e);
                 reader_handle.abort();
@@ -180,10 +188,11 @@ impl MoonrakerConnection
                 continue;
             }
 
-            for event in initial_objects.unwrap().status.events
-            {
+            for event in initial_objects.unwrap().status.events {
                 let mut unlocked_cache = cache.lock().await;
-                let _ = inbound_sender.send(Arc::new(WebsocketEvent::MoonrakerEvent(MoonrakerEvent::NotifyStatusUpdate(unlocked_cache.complete_event(event)))));
+                let _ = inbound_sender.send(Arc::new(WebsocketEvent::MoonrakerEvent(
+                    MoonrakerEvent::NotifyStatusUpdate(unlocked_cache.complete_event(event)),
+                )));
             }
 
             reader_handle.await.unwrap();
@@ -191,49 +200,73 @@ impl MoonrakerConnection
         }
     }
 
-    pub async fn send_request<T>(&self, method: &str, args: Option<serde_json::Value>) -> Result<T, crate::error::Error>
-    where T : DeserializeOwned
+    pub async fn send_request<T>(
+        &self,
+        method: &str,
+        args: Option<serde_json::Value>,
+    ) -> Result<T, crate::error::Error>
+    where
+        T: DeserializeOwned,
     {
         let mut listener = self.inbound_event_listener.resubscribe();
         let id = self.new_id().await;
 
-        let event = Arc::new(OutboundMessage::MoonrakerRequest(
-            MoonrakerRequest { id: id, method: method.to_string(), args: args }
-        ));
+        let event = Arc::new(OutboundMessage::MoonrakerRequest(MoonrakerRequest {
+            id: id,
+            method: method.to_string(),
+            args: args,
+        }));
         let _ = self.outbound_event_sender.send(event);
 
         loop {
-            let event = listener.recv().await.expect("Failed to retrieve internal event");
+            let event = listener
+                .recv()
+                .await
+                .expect("Failed to retrieve internal event");
 
-            match &*event
-            {
+            match &*event {
                 WebsocketEvent::MoonrakerReply(reply) if reply.id == id => {
-                    let parsed_result: Result<T, serde_json::Error> = serde_json::from_value(reply.result.clone());
+                    let parsed_result: Result<T, serde_json::Error> =
+                        serde_json::from_value(reply.result.clone());
 
                     match parsed_result {
                         Ok(result) => return Ok(result),
                         Err(e) => return Err(crate::error::Error::UnsupportedMessage(e)),
                     }
-                },
+                }
                 _ => continue, // TODO: This should eventually end
             }
         }
     }
 
-    pub async fn download_thumbnail(&self, thumbnail_filename: &str) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
-        let url = format!("http://{}/server/files/gcodes/{}", self.host, thumbnail_filename);
+    pub async fn download_thumbnail(
+        &self,
+        thumbnail_filename: &str,
+    ) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+        let url = format!(
+            "http://{}/server/files/gcodes/{}",
+            self.host, thumbnail_filename
+        );
 
         let body = reqwest::get(&url).await?.bytes().await?;
 
         Ok(body.to_vec())
     }
 
-    pub async fn reconnect(&self) -> Result<(FragmentCollectorRead<ReadHalf<TokioIo<Upgraded>>>, WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>), Box<dyn Error + Send + Sync>> {
+    pub async fn reconnect(
+        &self,
+    ) -> Result<
+        (
+            FragmentCollectorRead<ReadHalf<TokioIo<Upgraded>>>,
+            WebSocketWrite<WriteHalf<TokioIo<Upgraded>>>,
+        ),
+        Box<dyn Error + Send + Sync>,
+    > {
         let stream = TcpStream::connect(self.host.clone()).await?;
 
         let (ws, _) = handshake::client(&SpawnExecutor, self.request.clone(), stream).await?;
         let (rx, tx) = ws.split(tokio::io::split);
-        let reader= FragmentCollectorRead::new(rx);
+        let reader = FragmentCollectorRead::new(rx);
 
         Ok((reader, tx))
     }

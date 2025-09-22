@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use optional_struct::*;
+use serde::Deserialize;
 
 #[optional_struct]
 #[derive(Debug, Deserialize, Default, Clone)]
@@ -18,4 +18,3 @@ impl Fan {
         }
     }
 }
-

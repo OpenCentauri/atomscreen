@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use optional_struct::*;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Default, Clone, PartialEq)]
 pub struct ExcludeObjectDefinition {

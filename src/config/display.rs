@@ -1,7 +1,7 @@
-use crate::{application_error, AppWindow};
 use super::DisplayDefaultConfig;
 #[cfg(unix)]
 use super::DisplayFramebufferConfig;
+use crate::{application_error, AppWindow};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]

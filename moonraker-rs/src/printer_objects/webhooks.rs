@@ -1,10 +1,9 @@
-use serde::Deserialize;
 use optional_struct::*;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum KlippyState
-{
+pub enum KlippyState {
     Ready,
     Startup,
     Error,
@@ -19,8 +18,7 @@ impl Default for KlippyState {
 
 #[optional_struct]
 #[derive(Debug, Deserialize, Clone)]
-pub struct Webhooks
-{
+pub struct Webhooks {
     pub state: KlippyState,
     pub state_message: String,
 }

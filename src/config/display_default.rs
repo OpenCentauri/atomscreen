@@ -1,7 +1,7 @@
-use slint::ComponentHandle;
-use crate::{application_error, AppWindow};
 use super::DisplayInit;
+use crate::{application_error, AppWindow};
 use serde::{Deserialize, Serialize};
+use slint::ComponentHandle;
 
 #[derive(Serialize, Deserialize)]
 pub struct DisplayDefaultConfig {
@@ -9,12 +9,12 @@ pub struct DisplayDefaultConfig {
     pub height: u32,
 }
 
-impl DisplayInit for DisplayDefaultConfig
-{
+impl DisplayInit for DisplayDefaultConfig {
     fn init(&self) -> Result<AppWindow, application_error::ApplicationError> {
         let app = AppWindow::new()?;
 
-        app.window().set_size(slint::PhysicalSize::new(self.width,self.height));
+        app.window()
+            .set_size(slint::PhysicalSize::new(self.width, self.height));
 
         Ok(app)
     }

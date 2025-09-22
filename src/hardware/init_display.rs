@@ -1,16 +1,20 @@
-use crate::{application_error::ApplicationError, config::{DisplayConfig, DisplayInit}, AppWindow};
+use crate::{
+    application_error::ApplicationError,
+    config::{DisplayConfig, DisplayInit},
+    AppWindow,
+};
 
 pub fn init_display(config: &DisplayConfig) -> Result<AppWindow, ApplicationError> {
-    if let Some(default_config) = &config.default
-    {
+    if let Some(default_config) = &config.default {
         return default_config.init();
     }
 
     #[cfg(unix)]
-    if let Some(fb_config) = &config.framebuffer
-    {
+    if let Some(fb_config) = &config.framebuffer {
         return fb_config.init();
     }
 
-    Err(ApplicationError::Unknown(String::from("No display driver configured")))
+    Err(ApplicationError::Unknown(String::from(
+        "No display driver configured",
+    )))
 }

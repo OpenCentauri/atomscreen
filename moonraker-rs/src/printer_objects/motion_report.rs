@@ -1,10 +1,9 @@
-use serde::Deserialize;
 use optional_struct::*;
+use serde::Deserialize;
 
 #[optional_struct]
 #[derive(Debug, Deserialize, Default, Clone)]
-pub struct MotionReport
-{
+pub struct MotionReport {
     pub live_position: [f32; 4],
     pub live_velocity: f32,
     pub live_extruder_velocity: f32,

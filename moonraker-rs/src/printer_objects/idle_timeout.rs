@@ -1,6 +1,5 @@
-
-use serde::Deserialize;
 use optional_struct::*;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "PascalCase")]

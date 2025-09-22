@@ -9,5 +9,5 @@ pub enum Error {
     #[error("Failed to write message to websocket")]
     WebsocketWriteError(#[from] WebSocketError),
     #[error("Unknown error")]
-    Unknown(String)
+    Unknown(String),
 }
