@@ -1,4 +1,4 @@
-use crate::{moonraker_connection::{OptionalPrinterEvent, PrinterEvent}, printer_objects::*};
+use crate::{connector::{read_deserialize::OptionalPrinterEvent, websocket_read::PrinterEvent}, printer_objects::*};
 
 #[derive(Debug, Default)]
 pub struct Cache {

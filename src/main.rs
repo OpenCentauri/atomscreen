@@ -4,7 +4,7 @@
 use std::{cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc, sync::Arc, time::Duration};
 
 use clap::Parser;
-use moonraker_rs::moonraker_connection::{GeneralEvent, MoonrakerEvent, PrinterEvent};
+use moonraker_rs::{connector::websocket_read::{MoonrakerEvent, PrinterEvent}, moonraker_connection::WebsocketEvent, requests::FileManagementRequestHandler};
 use slint::{Image, Model, ModelRc, PlatformError, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
 
@@ -55,15 +55,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     //println!("Received Moonraker event: {:?}", event);
                     //connection_ref.get_listener();
 
-                    if let GeneralEvent::Connected = &*event 
+                    if let WebsocketEvent::Connected = &*event 
                     {
                         ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true)).unwrap();
                     }
-                    else if let GeneralEvent::Disconnected = &*event 
+                    else if let WebsocketEvent::Disconnected = &*event 
                     {
                         ui_weak.upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(false)).unwrap();
                     }
-                    else if let GeneralEvent::MoonrakerEvent(moonraker_event) = &*event
+                    else if let WebsocketEvent::MoonrakerEvent(moonraker_event) = &*event
                     {
                         if let MoonrakerEvent::NotifyStatusUpdate(status_update) = moonraker_event
                         {
@@ -125,7 +125,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let ui_weak = ui_weak_2.clone();
         ui_weak_2.upgrade().unwrap().global::<Filesystem>().set_loading(true);
         slint::spawn_local(async move {
-            if let Ok(mut files) = moonraker_connection.get_file_list().await
+            if let Ok(mut files) = moonraker_connection.list_gcode_files().await
             {
                 files.sort_by(|a, b | {
                     if a.modified > b.modified {
