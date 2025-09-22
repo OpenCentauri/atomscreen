@@ -1,6 +1,5 @@
 use fastwebsockets::WebSocketError;
 use thiserror::Error;
-use tokio::sync::broadcast::error::SendError;
 
 #[derive(Error, Debug)]
 pub enum Error {

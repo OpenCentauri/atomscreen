@@ -17,7 +17,7 @@ use crate::{
         websocket_write::OutboundMessage,
     },
     error::Error,
-    moonraker_connection::{MoonrakerConnection, MoonrakerReply, WebsocketEvent},
+    moonraker_connection::{MoonrakerReply, WebsocketEvent},
     printer_objects::*,
 };
 

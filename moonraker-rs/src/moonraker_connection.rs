@@ -4,15 +4,12 @@ use crate::connector::websocket_write::{
     MoonrakerRequest, OutboundMessage, moonraker_writer_connection_loop,
 };
 use crate::requests::PrinterAdministrationRequestHandler;
-use fastwebsockets::{FragmentCollector, WebSocket, handshake};
-use fastwebsockets::{FragmentCollectorRead, Frame, OpCode, Payload, WebSocketWrite};
+use fastwebsockets::handshake;
+use fastwebsockets::{FragmentCollectorRead, WebSocketWrite};
 use http_body_util::Empty;
-use hyper::rt::Executor;
 use hyper::{Request, body::Bytes, header, upgrade::Upgraded};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::cell::RefCell;
 use std::error::Error;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -22,7 +19,6 @@ use tokio::sync::broadcast::{Receiver, Sender};
 use tokio::sync::{Mutex, broadcast};
 use tokio::time::sleep;
 
-use super::printer_objects::*;
 use hyper_util::rt::TokioIo;
 
 struct SpawnExecutor;
