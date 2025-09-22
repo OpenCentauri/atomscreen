@@ -1,9 +1,7 @@
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{
-    cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc, sync::Arc,
-};
+use std::{cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc, sync::Arc};
 
 use clap::Parser;
 use moonraker_rs::{
@@ -11,10 +9,7 @@ use moonraker_rs::{
     moonraker_connection::WebsocketEvent,
     requests::FileManagementRequestHandler,
 };
-use slint::{
-    Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString,
-    VecModel,
-};
+use slint::{Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
 
 use crate::{config::MoonrakerConfig, hardware::init_display};
