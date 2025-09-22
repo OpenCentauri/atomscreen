@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use optional_struct::*;
 use serde::Deserialize;
 
@@ -13,6 +15,18 @@ pub enum KlippyState {
 impl Default for KlippyState {
     fn default() -> Self {
         KlippyState::Ready
+    }
+}
+
+impl Display for KlippyState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let state_str = match self {
+            KlippyState::Ready => "Ready",
+            KlippyState::Startup => "Startup",
+            KlippyState::Error => "Error",
+            KlippyState::Shutdown => "Shutdown",
+        };
+        write!(f, "{}", state_str)
     }
 }
 

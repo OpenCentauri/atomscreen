@@ -13,6 +13,7 @@ use serde_json::Value;
 use std::error::Error;
 use std::fmt::Debug;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::io::{ReadHalf, WriteHalf};
 use tokio::net::TcpStream;
 use tokio::sync::broadcast::{Receiver, Sender};
@@ -75,7 +76,6 @@ pub struct MoonrakerConnection {
 impl MoonrakerConnection {
     pub fn new(host: &str, port: u16) -> Self {
         let host = format!("{}:{}", host, port);
-        let url = format!("ws://{}/websocket", host);
 
         let req = Request::builder()
             .method("GET")
@@ -173,6 +173,8 @@ impl MoonrakerConnection {
                 }
             };
 
+            // TODO: Wait until Klippy is ready
+
             // TOOD: Don't subscribe to objects we don't have a use for.
             let initial_objects = self
                 .subscribe_to_printer_objects(object_list.objects.clone())
@@ -193,6 +195,7 @@ impl MoonrakerConnection {
 
             reader_handle.await.unwrap();
             writer_handle.await.unwrap();
+            sleep(Duration::from_secs(2)).await;
         }
     }
 

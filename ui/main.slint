@@ -1,26 +1,8 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView } from "std-widgets.slint";
 //import { VirtualKeyboard } from "virtual_keyboard.slint";
 import "../Figtree-Regular.ttf";
-
-
-export struct TemperatureSensor
-{
-    name: string,
-    temperature: int,
-}
-
-export struct Heater 
-{
-    temperature: int,
-    target: int,
-}
-
-export global State 
-{
-    in-out property<[TemperatureSensor]> temperature_sensors;
-    in-out property<Heater> extruder;
-    in-out property<Heater> heated_bed;
-} 
+import { TemperatureSensors} from "state.slint";
+export * from "state.slint";
 
 component Page inherits Rectangle {
     in property <string> header <=> h.text;
@@ -157,7 +139,9 @@ component TopBar inherits Rectangle {
                 colorize: Palette.alternate-foreground;
             }
             Text {
-                text: State.extruder.temperature + "°C";
+                text: TemperatureSensors.extruder.target > 0
+                    ? TemperatureSensors.extruder.temperature + "°C / " + TemperatureSensors.extruder.target + "°C"
+                    : TemperatureSensors.extruder.temperature + "°C";
                 color: Palette.alternate-foreground;
                 font-weight: 900;
             }
@@ -169,7 +153,9 @@ component TopBar inherits Rectangle {
                 colorize: Palette.alternate-foreground;
             }
             Text {
-                text: "20°C";
+                text: TemperatureSensors.heated_bed.target > 0
+                    ? TemperatureSensors.heated_bed.temperature + "°C / " + TemperatureSensors.heated_bed.target + "°C"
+                    : TemperatureSensors.heated_bed.temperature + "°C";
                 color: Palette.alternate-foreground;
                 font-weight: 900;
             }
@@ -191,6 +177,8 @@ export struct MoonrakerFileTest
 export global AppState
 {
     in-out property <bool> moonraker_connected: false;
+    in-out property <string> klipper_state: "-";
+    in-out property <string> klipper_state_message: "-";
 }
 
 export global Filesystem 
@@ -347,9 +335,43 @@ export component AppWindow inherits Window {
 
     default-font-family: "Figtree";
 
-    if AppState.moonraker_connected: MainView {
+    if AppState.moonraker_connected && AppState.klipper_state == "Ready" : MainView {
         width: 100%;
         height: 100%;
+    }
+
+    if AppState.moonraker_connected && AppState.klipper_state != "Ready" : VerticalLayout {
+        width: 100%;
+        spacing: 20px;
+        Rectangle {}
+        Rectangle {
+            VerticalLayout { 
+                width: 70%;
+                spacing: 20px;
+                alignment: center;
+                Text {
+                    text: AppState.klipper_state;
+                    font-weight: 900;
+                    horizontal-alignment: center;
+                }
+                Text {
+                    text: AppState.klipper_state_message;
+                    horizontal-alignment: center;
+                }
+                if AppState.klipper_state == "Error" || AppState.klipper_state == "Shutdown": HorizontalLayout {
+                    spacing: 20px;
+                    Button {
+                        text: "Restart";
+                        clicked => { }
+                    }
+                    Button {
+                        text: "Firmware Restart";
+                        clicked => { }
+                    }
+                }
+            } 
+        }
+        Rectangle {}
     }
 
     if !AppState.moonraker_connected: VerticalLayout

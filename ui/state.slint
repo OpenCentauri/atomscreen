@@ -1,0 +1,26 @@
+export struct TemperatureSensor
+{
+    name: string,
+    temperature: int,
+}
+
+export struct Heater 
+{
+    name: string,
+    temperature: int,
+    target: int,
+}
+
+export struct HeaterFan
+{
+    speed: float,
+    heater: Heater,
+}
+
+export global TemperatureSensors 
+{
+    in-out property<[TemperatureSensor]> temperature_sensors;
+    in-out property<[HeaterFan]> heater_fans;
+    in-out property<Heater> extruder;
+    in-out property<Heater> heated_bed;
+}

@@ -94,6 +94,12 @@ impl MoonrakerConnectionReadLoop {
             } {
                 // TODO: Erorr handling
                 eprintln!("Failed to process websocket event: {:?}", e);
+
+                if let Error::BreakError = e {
+                    #[cfg(debug_assertions)]
+                    println!("Breaking out of read loop");
+                    break;
+                }
             }
         }
     }
@@ -152,6 +158,11 @@ impl MoonrakerConnectionReadLoop {
                     }
                     MoonrakerEventParameters::NotifyProcessStatisticsUpdate(proc_stat_update) => {
                         self.inbound_sender.send(Arc::new(WebsocketEvent::MoonrakerEvent(MoonrakerEvent::NotifyProcessStatisticsUpdate(proc_stat_update)))).expect("Failed to internally send a moonraker process statistics update event");
+                    },
+                    MoonrakerEventParameters::NotifyKlippyDisconnect => {
+                        self.inbound_sender.send(Arc::new(WebsocketEvent::Disconnected)).expect("Failed to internally send a disconnect event");
+                        self.outbound_sender.send(Arc::new(OutboundMessage::EndLoop)).expect("Failed to internally send an endloop event");
+                        return Err(Error::BreakError);
                     }
                 }
             }

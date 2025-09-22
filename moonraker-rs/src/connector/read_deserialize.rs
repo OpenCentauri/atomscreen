@@ -51,22 +51,23 @@ impl<'de> Deserialize<'de> for JsonRpcNotification {
         struct NotificationHelper {
             jsonrpc: String,
             method: String,
-            params: Vec<serde_json::Value>,
+            params: Option<Vec<serde_json::Value>>,
         }
 
-        let mut helper = NotificationHelper::deserialize(deserializer)?;
+        let helper = NotificationHelper::deserialize(deserializer)?;
 
         let params = match helper.method.as_str() {
             "notify_status_update" => {
-                let parsed_params = serde_json::from_value(helper.params[0].take())
+                let parsed_params = serde_json::from_value(helper.params.unwrap()[0].take())
                     .map_err(serde::de::Error::custom)?;
                 MoonrakerEventParameters::NotifyStatusUpdate(parsed_params)
             }
             "notify_proc_stat_update" => {
-                let parsed_params = serde_json::from_value(helper.params[0].take())
+                let parsed_params = serde_json::from_value(helper.params.unwrap()[0].take())
                     .map_err(serde::de::Error::custom)?;
                 MoonrakerEventParameters::NotifyProcessStatisticsUpdate(parsed_params)
             }
+            "notify_klippy_disconnected" => MoonrakerEventParameters::NotifyKlippyDisconnect,
             _ => return Err(serde::de::Error::custom("Unknown method")),
         };
 
@@ -82,6 +83,7 @@ impl<'de> Deserialize<'de> for JsonRpcNotification {
 pub enum MoonrakerEventParameters {
     NotifyStatusUpdate(MoonrakerEventNotifyStatusUpdate),
     NotifyProcessStatisticsUpdate(MoonrakerNotifyProcStatUpdate),
+    NotifyKlippyDisconnect,
 }
 
 #[derive(Debug)]

@@ -9,4 +9,6 @@ pub enum Error {
     WebsocketWriteError(#[from] WebSocketError),
     #[error("Unknown error")]
     Unknown(String),
+    #[error("Internally used")]
+    BreakError,
 }
