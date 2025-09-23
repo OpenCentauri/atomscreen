@@ -1,6 +1,6 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
-import "../Figtree-Regular.ttf";
+import "../AdwaitaSans-Regular.ttf";
 import { TemperatureSensors, Heater } from "state.slint";
 export * from "state.slint";
 
@@ -548,7 +548,7 @@ export component AppWindow inherits Window {
 
     // The buttons to switch pages
 
-    default-font-family: "Figtree";
+    default-font-family: "Adwaita Sans";
 
     if AppState.moonraker_connected && AppState.klipper_state == "Ready" : MainView {
         width: 100%;
