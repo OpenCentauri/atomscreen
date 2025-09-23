@@ -4,8 +4,11 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "PascalCase")]
 pub enum IdleTimeoutState {
+    #[serde(alias = "printing")]
     Printing,
+    #[serde(alias = "ready")]
     Ready,
+    #[serde(alias = "idle")]
     Idle,
 }
 
