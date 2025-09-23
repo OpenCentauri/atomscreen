@@ -14,7 +14,7 @@ use serde_json::Value;
 use std::error::Error;
 use std::fmt::Debug;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::io::{ReadHalf, WriteHalf};
 use tokio::net::TcpStream;
 use tokio::sync::broadcast::{Receiver, Sender};
@@ -44,7 +44,7 @@ pub struct MoonrakerReply {
 #[derive(Debug, Clone)]
 pub struct MoonrakerErrorReply
 {
-    pub code: u32,
+    pub code: i32,
     pub message: String,
     pub id: u32,
 }
@@ -234,7 +234,8 @@ impl MoonrakerConnection {
                 .recv()
                 .await
                 .expect("Failed to retrieve internal event");
-
+            
+                let now = Instant::now();
             match &*event {
                 WebsocketEvent::MoonrakerReply(reply) if reply.id == id => {
                     let parsed_result: Result<T, serde_json::Error> =
@@ -247,10 +248,17 @@ impl MoonrakerConnection {
                 }
 
                 WebsocketEvent::MoonrakerErrorReply(error) if error.id == id => {
-                    println!("AAAAAAAAAAAAAAAAAAAAAA");
                     return Err(crate::error::Error::MoonrakerErrorReply(error.code, error.message.clone()));
                 }
-                _ => continue, // TODO: This should eventually end
+                _ => {
+                    if now.elapsed().as_secs() > 20 
+                    {
+                        return Err(crate::error::Error::Timeout);
+                    }
+                    else {
+                        continue;
+                    }
+                }, // TODO: This should eventually end
             }
         }
     }

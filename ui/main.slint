@@ -555,7 +555,7 @@ export component AppWindow inherits Window {
         height: 100%;
     }
 
-    if AppState.moonraker_connected && AppState.klipper_state != "Ready" : VerticalLayout {
+    if AppState.moonraker_connected && AppState.klipper_state != "Ready" && AppState.klipper_state != "" : VerticalLayout {
         width: 100%;
         spacing: 20px;
         Rectangle {}
@@ -589,7 +589,7 @@ export component AppWindow inherits Window {
         Rectangle {}
     }
 
-    if !AppState.moonraker_connected: VerticalLayout
+    if !AppState.moonraker_connected || AppState.klipper_state == "": VerticalLayout
     {
         VerticalLayout {
             width: 100%;

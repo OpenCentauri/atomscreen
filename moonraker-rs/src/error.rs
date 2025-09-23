@@ -8,9 +8,11 @@ pub enum Error {
     #[error("Failed to write message to websocket")]
     WebsocketWriteError(#[from] WebSocketError),
     #[error("Moonraker returned an error reply")]
-    MoonrakerErrorReply(u32, String),
+    MoonrakerErrorReply(i32, String),
     #[error("Unknown error")]
     Unknown(String),
     #[error("Internally used")]
     BreakError,
+    #[error("Timeout")]
+    Timeout,
 }

@@ -60,8 +60,8 @@ impl EventLoop
         self.ui_weak
             .upgrade_in_event_loop(move |ui| {
                 ui.global::<AppState>().set_moonraker_connected(false);
-                ui.global::<AppState>().set_klipper_state("Disconnected".into());
-                ui.global::<AppState>().set_klipper_state_message("Disconnected".into());
+                ui.global::<AppState>().set_klipper_state("".into());
+                ui.global::<AppState>().set_klipper_state_message("".into());
             })?;
 
         Ok(())

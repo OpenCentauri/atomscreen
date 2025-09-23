@@ -5,7 +5,7 @@ use crate::printer_objects::*;
 #[derive(Debug, Deserialize, Clone)]
 pub struct MoonrakerErrorReplyRaw
 {
-    pub code: u32,
+    pub code: i32,
     pub message: String
 }
 
