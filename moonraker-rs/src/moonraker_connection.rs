@@ -9,6 +9,7 @@ use fastwebsockets::{FragmentCollectorRead, WebSocketWrite};
 use http_body_util::Empty;
 use hyper::{Request, body::Bytes, header, upgrade::Upgraded};
 use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use serde_json::Value;
 use std::error::Error;
 use std::fmt::Debug;
@@ -40,6 +41,14 @@ pub struct MoonrakerReply {
     pub result: serde_json::Value, // TODO: Make type safe (by checking method name)
 }
 
+#[derive(Debug, Clone)]
+pub struct MoonrakerErrorReply
+{
+    pub code: u32,
+    pub message: String,
+    pub id: u32,
+}
+
 #[derive(Debug)]
 pub enum WebsocketEvent {
     Connected,
@@ -47,6 +56,7 @@ pub enum WebsocketEvent {
     Error(String),
     MoonrakerEvent(MoonrakerEvent),
     MoonrakerReply(MoonrakerReply),
+    MoonrakerErrorReply(MoonrakerErrorReply),
 }
 
 pub struct PrinterObjectsSubscribeParams {
@@ -234,6 +244,11 @@ impl MoonrakerConnection {
                         Ok(result) => return Ok(result),
                         Err(e) => return Err(crate::error::Error::UnsupportedMessage(e)),
                     }
+                }
+
+                WebsocketEvent::MoonrakerErrorReply(error) if error.id == id => {
+                    println!("AAAAAAAAAAAAAAAAAAAAAA");
+                    return Err(crate::error::Error::MoonrakerErrorReply(error.code, error.message.clone()));
                 }
                 _ => continue, // TODO: This should eventually end
             }

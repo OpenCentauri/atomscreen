@@ -2,11 +2,18 @@ use serde::Deserialize;
 
 use crate::printer_objects::*;
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct MoonrakerErrorReplyRaw
+{
+    pub code: u32,
+    pub message: String
+}
+
 #[derive(Debug, Deserialize)]
 pub struct JsonRpcMethodResponse {
     pub jsonrpc: String,
     pub result: Option<serde_json::Value>,
-    pub error: Option<serde_json::Value>,
+    pub error: Option<MoonrakerErrorReplyRaw>,
     pub id: u32,
 }
 

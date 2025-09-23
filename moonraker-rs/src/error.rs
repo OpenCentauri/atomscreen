@@ -7,6 +7,8 @@ pub enum Error {
     UnsupportedMessage(#[from] serde_json::Error),
     #[error("Failed to write message to websocket")]
     WebsocketWriteError(#[from] WebSocketError),
+    #[error("Moonraker returned an error reply")]
+    MoonrakerErrorReply(u32, String),
     #[error("Unknown error")]
     Unknown(String),
     #[error("Internally used")]

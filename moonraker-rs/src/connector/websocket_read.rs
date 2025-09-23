@@ -17,7 +17,7 @@ use crate::{
         websocket_write::OutboundMessage,
     },
     error::Error,
-    moonraker_connection::{MoonrakerReply, WebsocketEvent},
+    moonraker_connection::{MoonrakerErrorReply, MoonrakerReply, WebsocketEvent},
     printer_objects::*,
 };
 
@@ -125,19 +125,30 @@ impl MoonrakerConnectionReadLoop {
 
         match data {
             JsonRpcResponse::MethodResponse(method_response) => {
-                if method_response.error.is_some() {
+                if let Some(error) = &method_response.error {
                     eprintln!(
                         "Received error in method response: {:?}",
                         method_response.error
                     );
+
+                    let reply = MoonrakerErrorReply {
+                        code: error.code,
+                        message: error.message.clone(),
+                        id: method_response.id,
+                    };
+
+                    self.inbound_sender
+                        .send(Arc::new(WebsocketEvent::MoonrakerErrorReply(reply)))
+                        .expect("Failed to internally send a moonraker error reply event");
                 } else {
                     let reply = MoonrakerReply {
                         id: method_response.id,
                         result: method_response.result.unwrap_or(serde_json::json!(null)),
                     };
-                    let _ = self
+                    self
                         .inbound_sender
-                        .send(Arc::new(WebsocketEvent::MoonrakerReply(reply)));
+                        .send(Arc::new(WebsocketEvent::MoonrakerReply(reply)))
+                        .expect("Failed to internally send a moonraker reply event");
                 }
             }
             JsonRpcResponse::Notification(notification) => {

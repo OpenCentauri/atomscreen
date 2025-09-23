@@ -147,7 +147,7 @@ component TopBar inherits Rectangle {
             }
         }
         
-        HorizontalLayout {
+        if TemperatureSensors.heated_bed.name != "": HorizontalLayout {
             Image {
                 source: @image-url("assets/bed.svg");
                 colorize: Palette.alternate-foreground;
@@ -197,6 +197,7 @@ export global Utils
 {
     pure callback image_exists(image: image) -> bool;  
     pure callback format_bytes(size: int) -> string;
+    pure callback prettify_name(name: string) -> string;
 }
 
 component FileListView inherits Rectangle 
@@ -299,11 +300,7 @@ component SmallButton inherits Rectangle {
 component InteractableTemperatureElement {
     in-out property <Heater> heater;
     property <int> target: heater.target;
-    property <string> friendly_name: heater.name == "extruder"
-                    ? "Extruder"
-                    : heater.name == "heater_bed"
-                        ? "Heated Bed"
-                        : heater.name;
+    property <string> friendly_name: Utils.prettify_name(heater.name);
 
     changed heater => {
         target = heater.target;
@@ -466,7 +463,7 @@ component TemperaturePage inherits Page {
             padding-left: 20px;
             padding-right: 20px;
             InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }  }
-            InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }}
+            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }}
             for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); } }
         }
 

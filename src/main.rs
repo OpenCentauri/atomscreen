@@ -223,12 +223,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let moonraker_connection = moonraker_connection_clone_3.clone();
         slint::spawn_local(async move {
             let heater_name = heater_name.to_string();
-            // TODO: Double check if this works with temperature_fan's
+
+            let command = match heater_name.as_str() {
+                "extruder" | "heater_bed" => format!("SET_HEATER_TEMPERATURE HEATER={} TARGET={}", heater_name, target),
+                _ => format!("SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN={} TARGET={}", heater_name, target),
+            };
+
             let moonraker_connection = moonraker_connection.clone();
-            let command = format!("SET_HEATER_TEMPERATURE HEATER={} TARGET={}", heater_name, target);
+            // TODO: Remove except
             moonraker_connection.run_gcode_script(&command).await.expect("Failed to set heater temperature");
         })
         .unwrap();
+    });
+
+    ui.global::<Utils>().on_prettify_name(|name| {
+        let name = name.to_string();
+
+        let new_name = name.split("_").map(|s| {
+            let mut chars = s.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        }).collect::<Vec<String>>().join(" ");
+        
+        SharedString::from(new_name)
     });
 
     tokio::task::block_in_place(|| {
