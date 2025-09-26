@@ -18,6 +18,7 @@ image = { version = "0", default-features = false, features = ["png"] }
 [target.'cfg(unix)'.dependencies]
 evdev = "0"
 linuxfb = "0"
+memmap = "0"
 
 [build-dependencies]
 slint-build = "1.12.1"
