@@ -1,7 +1,7 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor } from "state.slint";
+import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor, PrinterAdministration } from "state.slint";
 export * from "state.slint";
 
 component Page inherits Rectangle {
@@ -528,9 +528,84 @@ component BottomBar inherits Rectangle {
     }
 }
 
+component GhostButton inherits VerticalLayout {
+    in property <string> text;
+    in property <color> text-color: Palette.foreground;
+    callback clicked;
+
+    Rectangle {
+        height: t.height * 2;
+        min-width: t.width * 1.5;
+        //background: red;
+
+        t := Text {
+            text: text;
+            color: text-color;
+            font-weight: 600;
+        }
+
+        TouchArea {
+            clicked => { root.clicked(); }
+        }
+    }
+}
+
+component YesNoPrompt inherits Rectangle 
+{
+    in property <string> title <=> title_text.text;
+    in property <string> message;
+
+    callback yes();
+    callback no();
+    border-radius: 20px;
+    background: Palette.background;
+
+    VerticalLayout {
+        spacing: 20px;
+        padding: StyleMetrics.layout-padding * 1.5; 
+
+        title_text := Text {
+            color: Palette.foreground;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        if message != "": title_message := Text {
+            text: message;
+            color: Palette.foreground;
+            wrap: word-wrap;
+        }
+
+        Rectangle {}
+
+        HorizontalLayout {
+            spacing: 10px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+            
+            GhostButton {
+                text: "No";
+                width: 60px;
+                text-color: Palette.accent-background;
+                clicked => { root.no(); }
+            }
+
+            GhostButton {
+                text: "Yes";
+                width: 60px;
+                text-color: Palette.accent-background;
+                clicked => { root.yes(); }
+            }
+        }
+    }
+}
+
 component MainView
 {
     in-out property <int> current-page: 0;
+    property <bool> is_emergency_prompt_open: false;
 
     VerticalLayout { 
         TopBar {
@@ -545,7 +620,7 @@ component MainView
                 IconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
                 IconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
                 IconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { root.current-page = 3;  } foreground: red; }
+                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
             }
 
             Rectangle { 
@@ -571,6 +646,31 @@ component MainView
 
         if DisplayStatus.message != "": BottomBar {
             text: DisplayStatus.message;
+        }
+    }
+
+    // TODO: Split this into a component
+    if is_emergency_prompt_open: Rectangle 
+    {
+        background: #00000080;
+        TouchArea { }
+
+        VerticalLayout {
+            width: 60%;
+            alignment: center;
+
+            YesNoPrompt {
+                x: (parent.width - self.width) / 2;
+                title: "Emergency Stop";
+                message: "Are you sure you want to perform an emergency stop?";
+                yes() => {
+                    is_emergency_prompt_open = false;
+                    PrinterAdministration.emergency_stop();
+                }
+                no() => {
+                    is_emergency_prompt_open = false;
+                }
+            }
         }
     }
 }
@@ -610,11 +710,11 @@ export component AppWindow inherits Window {
                     spacing: 20px;
                     Button {
                         text: "Restart";
-                        clicked => { }
+                        clicked => { PrinterAdministration.restart(); }
                     }
                     Button {
                         text: "Firmware Restart";
-                        clicked => { }
+                        clicked => { PrinterAdministration.firmware_restart(); }
                     }
                 }
             } 

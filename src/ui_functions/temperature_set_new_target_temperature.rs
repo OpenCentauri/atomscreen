@@ -21,9 +21,10 @@ pub fn register_temperature_set_new_target_temperature(ui : &AppWindow, moonrake
                 _ => format!("SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN={} TARGET={}", heater_name, target),
             };
 
-            let moonraker_connection = moonraker_connection.clone();
-            // TODO: Remove except
-            moonraker_connection.run_gcode_script(&command).await.expect("Failed to set heater temperature");
+            if let Err(e) = moonraker_connection.run_gcode_script(&command).await
+            {
+                moonraker_connection.send_request_error(format!("Failed to set new target temperature for {}: {}", heater_name, e));
+            }
         })
         .unwrap();
     });

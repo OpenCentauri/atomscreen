@@ -72,7 +72,7 @@ impl MoonrakerConnectionReadLoop {
                 Err(e) => {
                     // Assume connection lost
                     self.inbound_sender
-                        .send(Arc::new(WebsocketEvent::Error(e.to_string())))
+                        .send(Arc::new(WebsocketEvent::ApplicationError(e.to_string())))
                         .expect("Failed to internally send an error event");
                     self.inbound_sender
                         .send(Arc::new(WebsocketEvent::Disconnected))
@@ -118,8 +118,8 @@ impl MoonrakerConnectionReadLoop {
     pub async fn on_frame_text(&mut self, frame: &mut Frame<'static>) -> Result<(), Error> {
         let payload = String::from_utf8(frame.payload.to_vec()).expect("Invalid UTF-8 data");
 
-        #[cfg(debug_assertions)]
-        println!("Received text frame: {}", payload);
+        //#[cfg(debug_assertions)]
+        //println!("Received text frame: {}", payload);
 
         let data = serde_json::from_str::<JsonRpcResponse>(&payload)?;
 

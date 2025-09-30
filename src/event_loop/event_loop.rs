@@ -37,6 +37,11 @@ impl EventLoop
                         WebsocketEvent::Connected => self.on_connected().await,
                         WebsocketEvent::Disconnected => self.on_disconnected().await,
                         WebsocketEvent::MoonrakerEvent(event) => self.on_event(event).await,
+                        WebsocketEvent::ApplicationError(err_msg) => {
+                            // TODO: Do something with this
+                            eprintln!("Failed to send request: {}", err_msg);
+                            Ok(())
+                        }
                         _ => Ok(()),
                     }
                     {

@@ -35,3 +35,10 @@ export global DisplayStatus
     in-out property<string> message;
     in-out property<float> progress; // 0 -> 1
 }
+
+export global PrinterAdministration
+{
+    callback emergency_stop();
+    callback restart();
+    callback firmware_restart();
+}

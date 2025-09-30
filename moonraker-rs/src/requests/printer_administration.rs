@@ -13,6 +13,9 @@ pub trait PrinterAdministrationRequestHandler {
         objects: Vec<String>,
     ) -> Result<PrinterObjectsSubscribeResult, Error>;
     async fn run_gcode_script(&self, script: &str) -> Result<String, Error>;
+    async fn emergency_stop(&self) -> Result<String, Error>;
+    async fn restart(&self) -> Result<String, Error>;
+    async fn firmware_restart(&self) -> Result<String, Error>;
 }
 
 impl PrinterAdministrationRequestHandler for MoonrakerConnection {
@@ -40,6 +43,18 @@ impl PrinterAdministrationRequestHandler for MoonrakerConnection {
     async fn run_gcode_script(&self, script: &str) -> Result<String, Error> {
         let args = serde_json::json!({ "script": script });
         self.send_request("printer.gcode.script", Some(args)).await
+    }
+
+    async fn emergency_stop(&self) -> Result<String, Error> {
+        self.send_request("printer.emergency_stop", None).await
+    }
+
+    async fn restart(&self) -> Result<String, Error> {
+        self.send_request("printer.restart", None).await
+    }
+
+    async fn firmware_restart(&self) -> Result<String, Error> {
+        self.send_request("printer.firmware_restart", None).await
     }
 }
 

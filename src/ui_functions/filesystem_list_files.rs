@@ -10,7 +10,6 @@ pub fn register_filesystem_list_files(ui : &AppWindow, moonraker_connection : &A
     let ui_weak = ui.as_weak();
     let moonraker_connection = moonraker_connection.clone();
     ui.global::<Filesystem>().on_list_files(move || {
-        println!("List files clicked");
         let moonraker_connection = moonraker_connection.clone();
         let ui_weak = ui_weak.clone();
         ui_weak
@@ -19,41 +18,48 @@ pub fn register_filesystem_list_files(ui : &AppWindow, moonraker_connection : &A
             .global::<Filesystem>()
             .set_loading(true);
         slint::spawn_local(async move {
-            if let Ok(mut files) = moonraker_connection.list_gcode_files().await {
-                files.sort_by(|a, b| {
-                    if a.modified > b.modified {
-                        Ordering::Less
-                    } else if a.modified < b.modified {
-                        Ordering::Greater
-                    } else {
-                        Ordering::Equal
-                    }
-                });
+            let mut files = match moonraker_connection.list_gcode_files().await
+            {
+                Ok(f) => f,
+                Err(e) => {
+                    moonraker_connection.send_request_error(format!("Failed to list files: {}", e));
+                    return;
+                }
+            };
 
-                println!("Files: {:?}", files);
+            files.sort_by(|a, b| {
+                if a.modified > b.modified {
+                    Ordering::Less
+                } else if a.modified < b.modified {
+                    Ordering::Greater
+                } else {
+                    Ordering::Equal
+                }
+            });
 
-                let ui = ui_weak.upgrade().unwrap();
+            println!("Files: {:?}", files);
 
-                let converted_files: Vec<MoonrakerFileTest> = files
-                    .iter()
-                    .map(|f| MoonrakerFileTest {
-                        path: SharedString::from(&f.path),
-                        modified: f.modified,
-                        size: f.size,
-                        permissions: SharedString::from(&f.permissions),
-                        thumbnail: Image::default(),
-                    })
-                    .collect();
+            let ui = ui_weak.upgrade().unwrap();
 
-                ui.global::<Filesystem>()
-                    .set_files(ModelRc::new(Rc::new(VecModel::from(converted_files))));
-                ui.global::<Filesystem>().set_loading(false);
-                ui.global::<Filesystem>().invoke_download_thumbnail(0);
-                ui.global::<Filesystem>().invoke_download_thumbnail(1);
-                ui.global::<Filesystem>().invoke_download_thumbnail(2);
-                ui.global::<Filesystem>().invoke_download_thumbnail(3);
-                ui.global::<Filesystem>().invoke_download_thumbnail(4);
-            }
+            let converted_files: Vec<MoonrakerFileTest> = files
+                .iter()
+                .map(|f| MoonrakerFileTest {
+                    path: SharedString::from(&f.path),
+                    modified: f.modified,
+                    size: f.size,
+                    permissions: SharedString::from(&f.permissions),
+                    thumbnail: Image::default(),
+                })
+                .collect();
+
+            ui.global::<Filesystem>()
+                .set_files(ModelRc::new(Rc::new(VecModel::from(converted_files))));
+            ui.global::<Filesystem>().set_loading(false);
+            ui.global::<Filesystem>().invoke_download_thumbnail(0);
+            ui.global::<Filesystem>().invoke_download_thumbnail(1);
+            ui.global::<Filesystem>().invoke_download_thumbnail(2);
+            ui.global::<Filesystem>().invoke_download_thumbnail(3);
+            ui.global::<Filesystem>().invoke_download_thumbnail(4);
         })
         .unwrap();
     });

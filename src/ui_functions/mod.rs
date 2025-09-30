@@ -4,6 +4,9 @@ pub mod util_image_exists;
 pub mod filesystem_list_files;
 pub mod util_prettify_name;
 pub mod temperature_set_new_target_temperature;
+pub mod printer_emergency_stop;
+pub mod printer_restart;
+pub mod printer_firmware_restart;
 
 pub use util_format_bytes::*;
 pub use filesystem_download_thumbnail::*;
@@ -11,3 +14,6 @@ pub use util_image_exists::*;
 pub use filesystem_list_files::*;
 pub use util_prettify_name::*;
 pub use temperature_set_new_target_temperature::*;
+pub use printer_emergency_stop::*;
+pub use printer_restart::*;
+pub use printer_firmware_restart::*;

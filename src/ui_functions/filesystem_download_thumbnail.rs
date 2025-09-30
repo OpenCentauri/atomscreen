@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use moonraker_rs::{moonraker_connection::{self, MoonrakerConnection}, requests::FileManagementRequestHandler};
+use moonraker_rs::{moonraker_connection::{MoonrakerConnection}, requests::FileManagementRequestHandler};
 use slint::{ComponentHandle, Image, Model, Rgba8Pixel, SharedPixelBuffer, VecModel};
 use tokio::sync::Mutex;
 

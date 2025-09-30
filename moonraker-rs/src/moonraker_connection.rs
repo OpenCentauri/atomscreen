@@ -53,7 +53,7 @@ pub struct MoonrakerErrorReply
 pub enum WebsocketEvent {
     Connected,
     Disconnected,
-    Error(String),
+    ApplicationError(String),
     MoonrakerEvent(MoonrakerEvent),
     MoonrakerReply(MoonrakerReply),
     MoonrakerErrorReply(MoonrakerErrorReply),
@@ -297,5 +297,9 @@ impl MoonrakerConnection {
 
     pub fn get_listener(&self) -> Receiver<Arc<WebsocketEvent>> {
         self.inbound_event_listener.resubscribe()
+    }
+
+    pub fn send_request_error(&self, message : String) {
+        self.inbound_event_sender.send(Arc::new(WebsocketEvent::ApplicationError(message))).expect("Failed to internally send an error event");
     }
 }
