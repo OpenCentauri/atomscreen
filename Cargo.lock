@@ -432,6 +432,7 @@ dependencies = [
  "evdev",
  "image",
  "linuxfb",
+ "memmap",
  "moonraker-rs",
  "serde",
  "slint",

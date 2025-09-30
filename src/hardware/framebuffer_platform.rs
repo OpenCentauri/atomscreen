@@ -2,6 +2,7 @@
 
 use evdev::Device;
 use linuxfb::{double::Buffer, Framebuffer};
+use memmap::MmapMut;
 use slint::{
     platform::{
         software_renderer::{
@@ -14,13 +15,70 @@ use slint::{
 };
 use std::{
     cell::RefCell,
-    collections::VecDeque,
     rc::Rc,
-    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
 use crate::hardware::EvdevMtTouchPlatform;
+
+trait FramebufferHandler
+{
+    fn as_mut_slice(&mut self) -> &mut [u8];
+    fn flip(&mut self) -> Result<(), linuxfb::Error>;
+}
+
+struct SingleBufferFramebuffer
+{
+    fb: Framebuffer,
+    map: MmapMut,
+}
+
+impl SingleBufferFramebuffer
+{
+    fn new(fb : Framebuffer) -> Result<SingleBufferFramebuffer, linuxfb::Error>
+    {
+        let map = fb.map()?;
+        Ok(SingleBufferFramebuffer { fb: fb, map: map })
+    }
+}
+
+impl FramebufferHandler for SingleBufferFramebuffer
+{
+    fn as_mut_slice(&mut self) -> &mut [u8]
+    {
+        &mut self.map[..]
+    }
+
+    fn flip(&mut self) -> Result<(), linuxfb::Error> {
+        // Do nothing
+        Ok(())
+    }
+}
+
+struct DoubleBufferFramebuffer
+{
+    buffer: Buffer,
+}
+
+impl DoubleBufferFramebuffer
+{
+    fn new(fb : Framebuffer) -> Result<DoubleBufferFramebuffer, linuxfb::Error>
+    {
+        let buffer = Buffer::new(fb)?;
+        Ok(DoubleBufferFramebuffer { buffer: buffer })
+    }
+}
+
+impl FramebufferHandler for DoubleBufferFramebuffer
+{
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        self.buffer.as_mut_slice()
+    }
+
+    fn flip(&mut self) -> Result<(), linuxfb::Error> {
+        self.buffer.flip()
+    }
+}
 
 pub trait TouchPlatform {
     fn process_touch_events(&self) -> Vec<WindowEvent>;
@@ -28,7 +86,7 @@ pub trait TouchPlatform {
 
 pub struct FramebufferPlatform {
     window: Rc<MinimalSoftwareWindow>,
-    fb: RefCell<Buffer>,
+    fb: RefCell<Box<dyn FramebufferHandler>>,
     width: usize,
     height: usize,
     stride: usize,
@@ -38,7 +96,7 @@ pub struct FramebufferPlatform {
 }
 
 impl FramebufferPlatform {
-    pub fn new(fb: Framebuffer, touch_device: Option<Device>) -> Self {
+    pub fn new(fb: Framebuffer, touch_device: Option<Device>, double_buffering: bool) -> Self {
         let size = fb.get_size();
         let bytes_per_pixel = fb.get_bytes_per_pixel();
         let physical_size = fb.get_physical_size();
@@ -60,12 +118,19 @@ impl FramebufferPlatform {
             println!("No input device configured");
         }
 
-        let window = MinimalSoftwareWindow::new(RepaintBufferType::SwappedBuffers);
+        let window = MinimalSoftwareWindow::new(if double_buffering { RepaintBufferType::SwappedBuffers } else { RepaintBufferType::ReusedBuffer });
         window.set_size(PhysicalSize::new(size.0, size.1));
+
+        let framebuffer_handler: Box<dyn FramebufferHandler> = match double_buffering
+        {
+            true => Box::new(DoubleBufferFramebuffer::new(fb).expect("Failed to initialise double buffer")),
+            false => Box::new(SingleBufferFramebuffer::new(fb).expect("Failed to initialise single buffer"))
+        };
+
 
         Self {
             window,
-            fb: RefCell::new(Buffer::new(fb).unwrap()),
+            fb: RefCell::new(framebuffer_handler),
             width: size.0 as usize,
             height: size.1 as usize,
             stride: size.0 as usize,
@@ -158,7 +223,7 @@ impl Platform for FramebufferPlatform {
             }
 
             self.window.draw_if_needed(|renderer| {
-                let frame: &mut [u8] = fb.as_mut_slice();
+                let frame = fb.as_mut_slice();
                 if self.bytes_per_pixel == 2 {
                     let (_, pixels, _) = unsafe { frame.align_to_mut::<Rgb565Pixel>() };
                     renderer.render(pixels, self.stride);
