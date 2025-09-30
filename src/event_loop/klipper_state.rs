@@ -3,16 +3,9 @@ use slint::{ComponentHandle, SharedString};
 
 use crate::{application_error::ApplicationError, event_loop::EventLoop};
 
-pub trait KlipperStateHandler {
-    fn handle_klipper_state_updates(
-        &mut self,
-        printer_event: &PrinterEvent,
-    ) -> Result<(), ApplicationError>;
-}
-
-impl KlipperStateHandler for EventLoop {
-    fn handle_klipper_state_updates(
-        &mut self,
+impl EventLoop {
+    pub fn handle_klipper_state_updates(
+        &self,
         printer_event: &PrinterEvent,
     ) -> Result<(), ApplicationError> {
         if let PrinterEvent::Webhooks(webhooks) = printer_event {

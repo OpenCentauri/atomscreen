@@ -19,6 +19,8 @@ mod event_loop;
 
 slint::include_modules!();
 
+const UNITS: &[&str] = &["B", "KiB", "MiB", "GiB", "TiB", "PiB"];
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = config::Args::parse();
@@ -207,15 +209,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         });
 
     ui.global::<Utils>().on_format_bytes(|bytes| {
-        if bytes < 1024 {
-            return SharedString::from(format!("{} B", bytes));
-        }
+        let mut bytes = bytes as f64;
+        let mut idx = 0;
 
-        let units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"];
-        let idx = (bytes as f64).log(1024.0).floor() as usize;
-        let value = bytes as f64 / 1024_f64.powi(idx as i32);
-
-        SharedString::from(format!("{:.2} {}", value, units[idx]))
+        while bytes > 1024.0 {
+            bytes /= 1024.0;
+            idx += 1;
+        }        
+        SharedString::from(format!("{:.2} {}", bytes, UNITS[idx])) 
     });
 
     ui.global::<TemperatureSensors>().on_set_new_target_temperature(move |heater_name, target| {

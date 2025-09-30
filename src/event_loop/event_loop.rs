@@ -3,13 +3,18 @@ use std::sync::Arc;
 use moonraker_rs::{connector::websocket_read::{MoonrakerEvent, PrinterEvent}, moonraker_connection::{MoonrakerConnection, WebsocketEvent}};
 use slint::{ComponentHandle, Weak};
 
-use crate::{application_error::ApplicationError, event_loop::{KlipperStateHandler, TemperatureDevicesHandler}, AppState, AppWindow};
+use crate::{application_error::ApplicationError, AppState, AppWindow};
 
 pub struct EventLoop
 {
     pub ui_weak : Weak<AppWindow>,
     pub moonraker_connection : Arc<MoonrakerConnection>   
 }
+
+//pub trait EventLoopListener
+//{
+//    fn on_printer_event(event_loop : &EventLoop, event : &PrinterEvent) -> Result<(), ApplicationError>;
+//}
 
 impl EventLoop
 {
@@ -80,6 +85,7 @@ impl EventLoop
     {
         self.handle_temperature_devices_update(printer_event)?;
         self.handle_klipper_state_updates(printer_event)?;
+        self.handle_display_status_updates(printer_event)?;
 
         Ok(())
     }

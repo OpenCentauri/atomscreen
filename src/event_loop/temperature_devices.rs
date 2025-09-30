@@ -7,16 +7,9 @@ use crate::{
     application_error::ApplicationError, event_loop::EventLoop, AppWindow, Heater, HeaterFan, TemperatureSensor, TemperatureSensors
 };
 
-pub trait TemperatureDevicesHandler {
-    fn handle_temperature_devices_update(
-        &mut self,
-        printer_event: &PrinterEvent,
-    ) -> Result<(), ApplicationError>;
-}
-
-impl TemperatureDevicesHandler for EventLoop {
-    fn handle_temperature_devices_update(
-        &mut self,
+impl EventLoop {
+    pub fn handle_temperature_devices_update(
+        &self,
         printer_event: &PrinterEvent,
     ) -> Result<(), ApplicationError> {
         if let PrinterEvent::Extruder(extruder_event) = printer_event {

@@ -1,3 +1,4 @@
+// -- Temperatures --
 export struct TemperatureSensor
 {
     name: string,
@@ -26,4 +27,11 @@ export global TemperatureSensors
     in-out property<Heater> heated_bed;
 
     callback set_new_target_temperature(heater_name: string, target: int);
+}
+
+// -- Display Status --
+export global DisplayStatus 
+{
+    in-out property<string> message;
+    in-out property<float> progress; // 0 -> 1
 }

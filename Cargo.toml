@@ -27,3 +27,7 @@ members = ["moonraker-rs"]
 
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
 image = "cross-armv7:latest"
+
+[profile.release]
+strip = true
+lto = true

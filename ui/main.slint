@@ -1,7 +1,7 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, Heater } from "state.slint";
+import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor } from "state.slint";
 export * from "state.slint";
 
 component Page inherits Rectangle {
@@ -17,9 +17,9 @@ component Page inherits Rectangle {
             h := Text {
                 font-weight: 900;
                 horizontal-alignment: left;
-                y: 10px;
+                y: 2px;
             }
-            padding-bottom: 20px;
+            padding-bottom: 4px;
             vertical-stretch: 0;
         }
 
@@ -298,7 +298,7 @@ component SmallButton inherits Rectangle {
 }
 
 component InteractableTemperatureElement {
-    in-out property <Heater> heater;
+    in property <Heater> heater;
     property <int> target: heater.target;
     property <string> friendly_name: Utils.prettify_name(heater.name);
 
@@ -358,6 +358,37 @@ component InteractableTemperatureElement {
                 clicked => { 
                     on_manual_entry(heater.name, friendly_name);
                 }
+            }
+        }
+        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+    }
+}
+
+component ReadOnlyTemperatureElement
+{
+    in property <TemperatureSensor> temperature_sensor;
+
+    VerticalLayout {
+        HorizontalLayout {
+            height: 40px;
+            spacing: 10px;
+
+            Image {
+                colorize: Palette.foreground;
+                source: @image-url("assets/device_temperature.svg");
+            }
+
+            Text {
+                text: Utils.prettify_name(temperature_sensor.name);
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Text {
+                text: temperature_sensor.temperature + "°C";
+                vertical-alignment: center;
+                font-weight: 900;
             }
         }
         Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
@@ -465,6 +496,7 @@ component TemperaturePage inherits Page {
             InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }  }
             if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }}
             for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); } }
+            for temp_sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { temperature_sensor: temp_sensor;  }
         }
 
         visible: !is_keyboard_open;
@@ -484,10 +516,11 @@ component BottomBar inherits Rectangle {
     height: 20px;
     width: 100%;
     background: Palette.alternate-background;
+    in property <string> text;
 
     HorizontalLayout {
         Text {
-            text: "Elegoo is pirating Klipper. Release the source code! https://freethecode.lol/";
+            text: text;
             horizontal-alignment: center;
             vertical-alignment: center;
             color: Palette.alternate-foreground;
@@ -536,8 +569,8 @@ component MainView
             }
         }
 
-        BottomBar {
-
+        if DisplayStatus.message != "": BottomBar {
+            text: DisplayStatus.message;
         }
     }
 }
