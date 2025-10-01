@@ -7,6 +7,7 @@ pub mod temperature_set_new_target_temperature;
 pub mod printer_emergency_stop;
 pub mod printer_restart;
 pub mod printer_firmware_restart;
+pub mod printer_execute_gcode_command;
 
 pub use util_format_bytes::*;
 pub use filesystem_download_thumbnail::*;
@@ -17,3 +18,4 @@ pub use temperature_set_new_target_temperature::*;
 pub use printer_emergency_stop::*;
 pub use printer_restart::*;
 pub use printer_firmware_restart::*;
+pub use printer_execute_gcode_command::*;

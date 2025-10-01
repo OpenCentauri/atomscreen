@@ -1,7 +1,7 @@
-import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider } from "std-widgets.slint";
+import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider, ComboBox, TabWidget } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor, PrinterAdministration } from "state.slint";
+import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor, PrinterAdministration, GcodeCommands } from "state.slint";
 export * from "state.slint";
 
 component Page inherits Rectangle {
@@ -23,9 +23,12 @@ component Page inherits Rectangle {
             vertical-stretch: 0;
         }
 
-        Rectangle {
-            vertical-stretch: 1;
-            @children
+        GridLayout {
+            padding: StyleMetrics.layout-padding / 2;
+            Rectangle {
+                vertical-stretch: 1;
+                @children
+            }
         }
     }
 }
@@ -90,16 +93,18 @@ component PageThree inherits Page {
 component IconButton inherits Rectangle {
     in property <image> icon <=> img.source;
     in property <bool> checked: false;
-    in property <bool> left-side: true;
     in property <brush> foreground: checked ? Palette.accent-foreground : Palette.foreground;
+    in property <brush> bg: checked ? Palette.accent-background : Palette.background;
+
+    states [
+        pressed when touch-area.pressed : {
+            root.opacity: 0.5;
+        }
+    ]
 
     callback clicked();
 
-    background: checked ? Palette.accent-background : Palette.background;
-    border-top-left-radius: left-side ? StyleMetrics.layout-padding : 0;
-    border-bottom-left-radius: left-side ? StyleMetrics.layout-padding : 0;
-    border-top-right-radius: left-side ? 0 : StyleMetrics.layout-padding;
-    border-bottom-right-radius: left-side ? 0 : StyleMetrics.layout-padding;
+    background: bg;
 
     img := Image {
         horizontal-alignment: center;
@@ -107,9 +112,23 @@ component IconButton inherits Rectangle {
         colorize: foreground;
     }
 
-    TouchArea {
+    touch-area := TouchArea {
         clicked => { root.clicked(); }
     }
+}
+
+component RightSideIconButton inherits IconButton {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: StyleMetrics.layout-padding;
+    border-bottom-right-radius: StyleMetrics.layout-padding;
+}
+
+component LeftSideIconButton inherits IconButton {
+    border-top-left-radius: StyleMetrics.layout-padding;
+    border-bottom-left-radius: StyleMetrics.layout-padding;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 component TopBar inherits Rectangle {
@@ -258,6 +277,7 @@ component FileListView inherits Rectangle
 
 component SmallButton inherits Rectangle {
     in property <string> text;
+    in property <image> icon;
     callback clicked();
 
     background: Palette.control-background;
@@ -265,7 +285,7 @@ component SmallButton inherits Rectangle {
 
     states [
         pressed when touch-area.pressed : {
-            state-area.opacity: 0.5;
+            root.opacity: 0.5;
         }
     ]
 
@@ -278,22 +298,23 @@ component SmallButton inherits Rectangle {
                 clicked => { root.clicked(); }
             }
 
-            Text {
-                text: root.text;
-                color: Palette.control-foreground;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                font-size: 12px;
+            HorizontalLayout {
+                spacing: 10px;
+                alignment: center;
+                if Utils.image_exists(root.icon) : Image {
+                    source: root.icon;
+                    colorize: Palette.control-foreground;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: root.text;
+                    color: Palette.control-foreground;
+                    vertical-alignment: center;
+                    font-size: 12px;
+                }
             }
         }
-    }
-
-    state-area := Rectangle {
-        border-radius: root.border-radius;
-        opacity: 0;
-        background: #000000;
-
-        animate opacity { duration: 30ms; }
     }
 }
 
@@ -301,6 +322,7 @@ component InteractableTemperatureElement {
     in property <Heater> heater;
     property <int> target: heater.target;
     property <string> friendly_name: Utils.prettify_name(heater.name);
+    in property <bool> hide_temp_control: false;
 
     changed heater => {
         target = heater.target;
@@ -309,8 +331,9 @@ component InteractableTemperatureElement {
     callback on_manual_entry(internal_name: string, friendly_name: string);
 
     VerticalLayout {
+        spacing: 10px;
         HorizontalLayout {
-            height: 40px;
+            height: 30px;
             spacing: 10px;
 
             Image {
@@ -337,10 +360,12 @@ component InteractableTemperatureElement {
                 font-weight: 900;
             }
         }
-        HorizontalLayout {
+
+        @children
+
+        if !hide_temp_control: HorizontalLayout {
             spacing: 10px;
-            height: 40px;
-            padding-bottom: 10px;
+            height: 30px;
             SmallButton {
                 text: "Off";
                 clicked => { 
@@ -360,7 +385,8 @@ component InteractableTemperatureElement {
                 }
             }
         }
-        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+
+        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; }
     }
 }
 
@@ -403,11 +429,11 @@ component NumberPad inherits Rectangle
     property <int> current-number: 0;
 
     function add(key: int) {
-        if (current-number > 1000) {
+        if (current-number * 10 + key > 999) {
             return;
         }
 
-        current-number = current-number * 10 + key;        
+        current-number = current-number * 10 + key;
     }
 
     function remove() {
@@ -462,11 +488,20 @@ component NumberPad inherits Rectangle
     }
 }
 
-component TemperaturePage inherits Page {
-    header: "Temperature";
-    property <bool> is_keyboard_open: false;
+component TemperatureEntry
+{
+    out property <bool> is_keyboard_open: false;
     property <string> internal_temp_device_name;
     property <string> friendly_temp_device_name;
+
+    public function open_keyboard(internal_name: string, friendly_name: string) {
+        internal_temp_device_name = internal_name;
+        friendly_temp_device_name = friendly_name;
+        is_keyboard_open = true;
+    }
+
+    width: 100%;
+    height: 100%;
 
     if is_keyboard_open: GridLayout {
         padding-left: StyleMetrics.layout-padding / 2;
@@ -482,24 +517,107 @@ component TemperaturePage inherits Page {
             }
         }
     }
+}
 
-    function open_keyboard(internal_name: string, friendly_name: string) {
-        internal_temp_device_name = internal_name;
-        friendly_temp_device_name = friendly_name;
-        is_keyboard_open = true;
-    }
+component TemperaturePage inherits Page {
+    header: "Temperature";
+
+    property <int> selection : 0;
 
     ScrollView {
         VerticalLayout {
-            padding-left: 20px;
-            padding-right: 20px;
-            InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }  }
-            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); }}
-            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { open_keyboard(internal-name, friendly-name); } }
+            InteractableTemperatureElement { 
+                heater: TemperatureSensors.extruder; 
+                on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
+                hide_temp_control: selection != 0;
+/*
+                HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    SmallButton {
+                        icon: @image-url("assets/eject.svg");
+                        text: "Retract";
+                    }
+                    SmallButton {
+                        icon: @image-url("assets/arrow-down.svg");
+                        text: "Extrude";
+                    }
+                }
+
+                HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    SmallButton {
+                        text: "Load filament";
+                    }
+                    SmallButton {
+                        text: "Unload filament";
+                    }
+                }
+*/
+                // TODO: Split off into component
+                // TODO: Find a better way to do those checks
+                HorizontalLayout {
+                    height: 30px;
+                    SmallButton {
+                        border-radius: 0;
+                        background: selection == 0 ? Palette.control-background : transparent;
+                        text: "Temperature";
+                        clicked => { selection = 0; }
+                    }
+                    if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: SmallButton {
+                        border-radius: 0;
+                        background: selection == 1 ? Palette.control-background : transparent;
+                        text: "Extrude/Retract";
+                        clicked => { selection = 1; }
+                    }
+                    if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: SmallButton {
+                        border-radius: 0;
+                        background: selection == 2 ? Palette.control-background : transparent;
+                        text: "Load/Unload";
+                        clicked => { selection = 2; }
+                    }
+                }
+
+                if selection == 1: HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    if GcodeCommands.extruder_retract_available: SmallButton {
+                        icon: @image-url("assets/eject.svg");
+                        text: "Retract";
+                        clicked => { GcodeCommands.extruder_retract(); }
+                    }
+                    if GcodeCommands.extruder_extrude_available:SmallButton {
+                        icon: @image-url("assets/arrow-down.svg");
+                        text: "Extrude";
+                        clicked => { GcodeCommands.extruder_extrude(); }
+                    }
+                }
+
+                if selection == 2: HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    if GcodeCommands.extruder_unload_filament_available: SmallButton {
+                        text: "Unload filament";
+                        clicked => { GcodeCommands.extruder_unload_filament(); }
+                    }
+                    if GcodeCommands.extruder_load_filament_available: SmallButton {
+                        text: "Load filament";
+                        clicked => { GcodeCommands.extruder_load_filament(); }
+                    }
+                }
+            }
+
+            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); }}
+            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
             for temp_sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { temperature_sensor: temp_sensor;  }
         }
 
-        visible: !is_keyboard_open;
+        visible: !t.is_keyboard_open;
+    }
+
+    t := TemperatureEntry {
+
     }
 }
 
@@ -602,6 +720,72 @@ component YesNoPrompt inherits Rectangle
     }
 }
 
+component ExtruderPage inherits Page {
+    header: "Extruder";
+
+    HorizontalLayout {
+        spacing: StyleMetrics.layout-padding;
+        visible: !t.is_keyboard_open;
+
+
+        VerticalLayout {
+            InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
+            Rectangle {}
+            HorizontalLayout {
+                height: 30px;
+                spacing: StyleMetrics.layout-padding / 2;
+                SmallButton {
+                    text: "Load Filament";
+                }
+                SmallButton {
+                    text: "Unload Filament";
+                }
+            }
+        }
+        
+        VerticalLayout {
+            width: 50px;
+            spacing: 10px;
+            padding-bottom: StyleMetrics.layout-padding / 2;
+
+            // Unload
+            
+            GridLayout {
+                padding-left: StyleMetrics.layout-padding / 2;
+                padding-right: StyleMetrics.layout-padding / 2;
+                IconButton {
+                    icon: @image-url("assets/eject.svg");
+                    checked: true;
+                    border-radius: StyleMetrics.layout-padding;
+                }
+            }
+
+            Text {
+                text: "Extrude";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                rotation-angle: 90deg;
+            }
+
+            GridLayout {
+                padding-left: StyleMetrics.layout-padding / 2;
+                padding-right: StyleMetrics.layout-padding / 2;
+                IconButton {
+                    icon: @image-url("assets/arrow-down.svg");
+                    checked: true;
+                    border-radius: StyleMetrics.layout-padding;
+                }
+            }
+        }
+
+
+    }
+
+    t := TemperatureEntry {
+
+    }
+}
+
 component MainView
 {
     in-out property <int> current-page: 0;
@@ -617,10 +801,15 @@ component MainView
                 spacing: 5px;
                 horizontal-stretch: 0;
                 min-width: 50px;
-                IconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
-                IconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
-                IconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                IconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
+                LeftSideIconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
+                LeftSideIconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
+                LeftSideIconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
+                LeftSideIconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
+            }
+
+            Rectangle {
+                width: 1px;
+                background: Palette.border;
             }
 
             Rectangle { 
@@ -631,16 +820,22 @@ component MainView
                 PageThree { visible: root.current-page == 2;  }
                 if root.current-page == 1: TemperaturePage { }
                 if root.current-page == 0: PageFour { }
+                if root.current-page == 6: ExtruderPage {}
+            }
+
+            Rectangle {
+                width: 1px;
+                background: Palette.border;
             }
 
             VerticalLayout {
                 spacing: 5px;
                 horizontal-stretch: 0;
                 min-width: 50px;
-                IconButton { icon: @image-url("assets/fan.svg"); checked: root.current-page == 4; clicked => { root.current-page = 4; } left-side: false; }
-                IconButton { icon: @image-url("assets/quickaction.svg"); checked: root.current-page == 5; clicked => { root.current-page = 5; } left-side: false; }
-                IconButton { icon: @image-url("assets/console.svg"); checked: root.current-page == 6; clicked => { root.current-page = 6; } left-side: false; }
-                IconButton { icon: @image-url("assets/settings.svg"); checked: root.current-page == 7; clicked => { root.current-page = 7; } left-side: false; }
+                RightSideIconButton { icon: @image-url("assets/fan.svg"); checked: root.current-page == 4; clicked => { root.current-page = 4; } }
+                RightSideIconButton { icon: @image-url("assets/quickaction.svg"); checked: root.current-page == 5; clicked => { root.current-page = 5; }}
+                RightSideIconButton { icon: @image-url("assets/extruder.svg"); checked: root.current-page == 6; clicked => { root.current-page = 6; } }
+                RightSideIconButton { icon: @image-url("assets/settings.svg"); checked: root.current-page == 7; clicked => { root.current-page = 7; } }
             }
         }
 
@@ -678,8 +873,6 @@ component MainView
 export component AppWindow inherits Window {
     width: 480px;
     height: 272px;
-
-    // The buttons to switch pages
 
     default-font-family: "Adwaita Sans";
 

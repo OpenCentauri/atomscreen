@@ -5,6 +5,7 @@ pub mod display_default;
 #[cfg(unix)]
 pub mod display_fb;
 pub mod moonraker;
+pub mod gcode_commands;
 
 pub use cli::*;
 pub use config::*;
@@ -13,3 +14,4 @@ pub use display_default::*;
 #[cfg(unix)]
 pub use display_fb::*;
 pub use moonraker::*;
+pub use gcode_commands::*;

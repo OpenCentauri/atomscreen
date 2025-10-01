@@ -42,3 +42,16 @@ export global PrinterAdministration
     callback restart();
     callback firmware_restart();
 }
+
+export global GcodeCommands
+{
+    in-out property <bool> extruder_extrude_available: false;
+    in-out property <bool> extruder_retract_available: false;
+    in-out property <bool> extruder_load_filament_available: false;
+    in-out property <bool> extruder_unload_filament_available: false;
+
+    callback extruder_extrude();
+    callback extruder_retract();
+    callback extruder_load_filament();
+    callback extruder_unload_filament();
+}

@@ -10,7 +10,7 @@ use moonraker_rs::{
 use slint::{Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
 use tokio::sync::Mutex;
 
-use crate::{config::MoonrakerConfig, event_loop::EventLoop, hardware::init_display, ui_functions::{register_filesystem_download_thumbnails, register_filesystem_list_files, register_printer_emergency_stop, register_printer_firmware_restart, register_printer_restart, register_temperature_set_new_target_temperature, register_util_format_bytes, register_util_image_exists, register_util_prettify_name}};
+use crate::{config::{MoonrakerConfig, OptionalGcodeCommands}, event_loop::EventLoop, hardware::init_display, ui_functions::{register_extruder_extrude, register_extruder_load_filament, register_extruder_retract, register_extruder_unload_filament, register_filesystem_download_thumbnails, register_filesystem_list_files, register_printer_emergency_stop, register_printer_firmware_restart, register_printer_restart, register_temperature_set_new_target_temperature, register_util_format_bytes, register_util_image_exists, register_util_prettify_name}};
 
 mod application_error;
 mod config;
@@ -94,6 +94,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     register_printer_emergency_stop(&ui, &moonraker_connection);
     register_printer_firmware_restart(&ui, &moonraker_connection);
     register_printer_restart(&ui, &moonraker_connection);
+
+    let gcode_command_config = &config.gcode_commands.unwrap_or(OptionalGcodeCommands::default());
+    register_extruder_extrude(&ui, &moonraker_connection, gcode_command_config);
+    register_extruder_retract(&ui, &moonraker_connection, gcode_command_config);
+    register_extruder_load_filament(&ui, &moonraker_connection, gcode_command_config);
+    register_extruder_unload_filament(&ui, &moonraker_connection, gcode_command_config);
 
     tokio::task::block_in_place(|| {
         ui.run().unwrap();

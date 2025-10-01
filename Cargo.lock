@@ -434,6 +434,7 @@ dependencies = [
  "linuxfb",
  "memmap",
  "moonraker-rs",
+ "optional_struct",
  "serde",
  "slint",
  "slint-build",
