@@ -1,7 +1,7 @@
-use moonraker_rs::connector::websocket_read::PrinterEvent;
+use moonraker_rs::{connector::websocket_read::PrinterEvent};
 use slint::{ComponentHandle, SharedString};
 
-use crate::{application_error::ApplicationError, event_loop::EventLoop};
+use crate::{application_error::ApplicationError, event_loop::EventLoop, Webhooks};
 
 impl EventLoop {
     pub fn handle_klipper_state_updates(
@@ -13,8 +13,8 @@ impl EventLoop {
             let state_message = SharedString::from(&webhooks.state_message);
 
             self.ui_weak.upgrade_in_event_loop(move |ui| {
-                ui.global::<crate::AppState>().set_klipper_state(state);
-                ui.global::<crate::AppState>().set_klipper_state_message(state_message);
+                ui.global::<Webhooks>().set_klipper_state(state);
+                ui.global::<Webhooks>().set_klipper_state_message(state_message);
             })?;
         }
 

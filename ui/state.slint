@@ -1,23 +1,4 @@
-// -- Temperatures --
-export struct TemperatureSensor
-{
-    name: string,
-    temperature: int,
-}
-
-export struct Heater 
-{
-    name: string,
-    temperature: int,
-    target: int,
-    presets: [int]
-}
-
-export struct HeaterFan
-{
-    speed: float,
-    heater: Heater,
-}
+import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile } from "types.slint";
 
 export global TemperatureSensors 
 {
@@ -29,7 +10,6 @@ export global TemperatureSensors
     callback set_new_target_temperature(heater_name: string, target: int);
 }
 
-// -- Display Status --
 export global DisplayStatus 
 {
     in-out property<string> message;
@@ -54,4 +34,30 @@ export global GcodeCommands
     callback extruder_retract();
     callback extruder_load_filament();
     callback extruder_unload_filament();
+}
+
+export global Webhooks
+{
+    in-out property <bool> moonraker_connected: false;
+    in-out property <string> klipper_state: "-";
+    in-out property <string> klipper_state_message: "-";
+}
+
+export global Filesystem 
+{
+    callback list_files();
+    callback download_thumbnail(index : int);
+    in-out property <[MoonrakerFile]> files: [{
+        path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",
+    }, {
+        path: "a-really-really-really-really-really-really-really-really-really-long-name.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--"
+    }];
+    in-out property <bool> loading: false;
+}
+
+export global Utils
+{
+    pure callback image_exists(image: image) -> bool;  
+    pure callback format_bytes(size: int) -> string;
+    pure callback prettify_name(name: string) -> string;
 }

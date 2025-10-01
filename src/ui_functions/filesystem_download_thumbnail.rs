@@ -4,7 +4,7 @@ use moonraker_rs::{moonraker_connection::{MoonrakerConnection}, requests::FileMa
 use slint::{ComponentHandle, Image, Model, Rgba8Pixel, SharedPixelBuffer, VecModel};
 use tokio::sync::Mutex;
 
-use crate::{AppWindow, Filesystem, MoonrakerFileTest};
+use crate::{AppWindow, Filesystem, MoonrakerFile};
 
 pub fn register_filesystem_download_thumbnails(ui: &AppWindow, moonraker_connection : &Arc<MoonrakerConnection>)
 {
@@ -23,14 +23,14 @@ pub fn register_filesystem_download_thumbnails(ui: &AppWindow, moonraker_connect
                 let ui = ui_weak.upgrade().unwrap();
 
                 let f = ui.global::<Filesystem>().get_files();
-                let files = f.as_any().downcast_ref::<VecModel<MoonrakerFileTest>>();
+                let files = f.as_any().downcast_ref::<VecModel<MoonrakerFile>>();
 
                 let non_optional_files = match files {
                     Some(files) => files,
                     None => return,
                 };
 
-                let mut unwrapped_files: Vec<MoonrakerFileTest> =
+                let mut unwrapped_files: Vec<MoonrakerFile> =
                     non_optional_files.iter().collect();
 
                 if global_index < unwrapped_files.len() {

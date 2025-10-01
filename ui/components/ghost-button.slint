@@ -1,0 +1,23 @@
+import { Palette } from "std-widgets.slint";
+
+export component GhostButton inherits VerticalLayout {
+    in property <string> text;
+    in property <color> text-color: Palette.foreground;
+    callback clicked;
+
+    Rectangle {
+        height: t.height * 2;
+        min-width: t.width * 1.5;
+        //background: red;
+
+        t := Text {
+            text: text;
+            color: text-color;
+            font-weight: 600;
+        }
+
+        TouchArea {
+            clicked => { root.clicked(); }
+        }
+    }
+}

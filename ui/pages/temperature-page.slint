@@ -1,0 +1,189 @@
+import { Heater } from "../types.slint";
+import { SmallButton } from "../components/small-button.slint";
+import { TemperatureSensors, Utils, GcodeCommands } from "../state.slint"; 
+import { TemperatureSensor } from "../types.slint";
+import { Page } from "../components/page.slint";
+import { ScrollView, Palette } from "std-widgets.slint";
+import { TemperatureEntry } from "../components/number-pad.slint";
+import { Icons } from "../constants.slint";
+
+export component InteractableTemperatureElement {
+    in property <Heater> heater;
+    property <int> target: heater.target;
+    property <string> friendly_name: Utils.prettify_name(heater.name);
+    in property <bool> hide_temp_control: false;
+
+    changed heater => {
+        target = heater.target;
+    }
+
+    callback on_manual_entry(internal_name: string, friendly_name: string);
+
+    VerticalLayout {
+        spacing: 10px;
+        HorizontalLayout {
+            height: 30px;
+            spacing: 10px;
+
+            Image {
+                colorize: Palette.foreground;
+                source: heater.name == "extruder"
+                    ? Icons.extruder
+                    : heater.name == "heater_bed"
+                        ? Icons.bed
+                        : Icons.fan;
+            }
+
+            Text {
+                text: friendly_name;
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Text {
+                text: target > 0
+                    ? heater.temperature + "°C -> " + target + "°C"
+                    : heater.temperature + "°C";
+                vertical-alignment: center;
+                font-weight: 900;
+            }
+        }
+
+        @children
+
+        if !hide_temp_control: HorizontalLayout {
+            spacing: 10px;
+            height: 30px;
+            SmallButton {
+                text: "Off";
+                clicked => { 
+                    TemperatureSensors.set_new_target_temperature(heater.name, 0);
+                }   
+            }
+            for preset in heater.presets : SmallButton {
+                text: preset + "°C";
+                clicked => { 
+                    TemperatureSensors.set_new_target_temperature(heater.name, preset);
+                }   
+            }
+            SmallButton {
+                text: "Set";
+                clicked => { 
+                    on_manual_entry(heater.name, friendly_name);
+                }
+            }
+        }
+
+        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; }
+    }
+}
+
+component ReadOnlyTemperatureElement
+{
+    in property <TemperatureSensor> temperature_sensor;
+
+    VerticalLayout {
+        HorizontalLayout {
+            height: 40px;
+            spacing: 10px;
+
+            Image {
+                colorize: Palette.foreground;
+                source: Icons.device-temperature;
+            }
+
+            Text {
+                text: Utils.prettify_name(temperature_sensor.name);
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Text {
+                text: temperature_sensor.temperature + "°C";
+                vertical-alignment: center;
+                font-weight: 900;
+            }
+        }
+        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+    }
+}
+
+export component TemperaturePage inherits Page {
+    header: "Temperature";
+
+    property <int> selection : 0;
+
+    ScrollView {
+        VerticalLayout {
+            InteractableTemperatureElement { 
+                heater: TemperatureSensors.extruder; 
+                on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
+                hide_temp_control: selection != 0;
+
+                // TODO: Split off into component
+                // TODO: Find a better way to do those checks
+                HorizontalLayout {
+                    height: 30px;
+                    SmallButton {
+                        border-radius: 0;
+                        background: selection == 0 ? Palette.control-background : transparent;
+                        text: "Temperature";
+                        clicked => { selection = 0; }
+                    }
+                    if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: SmallButton {
+                        border-radius: 0;
+                        background: selection == 1 ? Palette.control-background : transparent;
+                        text: "Extrude/Retract";
+                        clicked => { selection = 1; }
+                    }
+                    if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: SmallButton {
+                        border-radius: 0;
+                        background: selection == 2 ? Palette.control-background : transparent;
+                        text: "Load/Unload";
+                        clicked => { selection = 2; }
+                    }
+                }
+
+                if selection == 1: HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    if GcodeCommands.extruder_retract_available: SmallButton {
+                        icon: Icons.eject;
+                        text: "Retract";
+                        clicked => { GcodeCommands.extruder_retract(); }
+                    }
+                    if GcodeCommands.extruder_extrude_available:SmallButton {
+                        icon: Icons.arrow-down;
+                        text: "Extrude";
+                        clicked => { GcodeCommands.extruder_extrude(); }
+                    }
+                }
+
+                if selection == 2: HorizontalLayout {
+                    height: 30px;
+                    spacing: 10px;
+                    if GcodeCommands.extruder_unload_filament_available: SmallButton {
+                        text: "Unload filament";
+                        clicked => { GcodeCommands.extruder_unload_filament(); }
+                    }
+                    if GcodeCommands.extruder_load_filament_available: SmallButton {
+                        text: "Load filament";
+                        clicked => { GcodeCommands.extruder_load_filament(); }
+                    }
+                }
+            }
+
+            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); }}
+            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
+            for temp_sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { temperature_sensor: temp_sensor;  }
+        }
+
+        visible: !t.is_keyboard_open;
+    }
+
+    t := TemperatureEntry {
+
+    }
+}

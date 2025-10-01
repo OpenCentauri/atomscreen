@@ -1,0 +1,23 @@
+import { Palette } from "std-widgets.slint";
+import { DisplayStatus } from "../state.slint";
+
+export component BottomBar inherits Rectangle {
+    height: 20px;
+    width: 100%;
+    background: Palette.alternate-background;
+    in property <string> text;
+
+    HorizontalLayout {
+        Text {
+            text: text;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: Palette.alternate-foreground;
+        }
+    }
+}
+
+export component BottomBarWithStatusMessage inherits BottomBar {
+    text: DisplayStatus.message;
+    height: DisplayStatus.message == "" ? 0px : 20px;
+}

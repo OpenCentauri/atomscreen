@@ -1,14 +1,12 @@
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{cmp::Ordering, error::Error, fs, path::PathBuf, process::exit, rc::Rc, sync::Arc};
+use std::{error::Error, fs, path::PathBuf, process::exit, sync::Arc};
 
 use clap::Parser;
 use moonraker_rs::{
-    cache::Cache, connector::{read_deserialize::OptionalPrinterEvent, websocket_read::{MoonrakerEvent, PrinterEvent}}, moonraker_connection::WebsocketEvent, printer_objects::{NamedOptionalTemperatureFan, OptionalExtruder, OptionalHeaterBed, OptionalTemperatureFan, TemperatureConfiguration}, requests::{FileManagementRequestHandler, PrinterAdministrationRequestHandler}
+    cache::Cache, connector::{read_deserialize::OptionalPrinterEvent}, printer_objects::{NamedOptionalTemperatureFan, OptionalExtruder, OptionalHeaterBed, OptionalTemperatureFan, TemperatureConfiguration}, 
 };
-use slint::{Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel};
-use tokio::sync::Mutex;
 
 use crate::{config::{MoonrakerConfig, OptionalGcodeCommands}, event_loop::EventLoop, hardware::init_display, ui_functions::{register_extruder_extrude, register_extruder_load_filament, register_extruder_retract, register_extruder_unload_filament, register_filesystem_download_thumbnails, register_filesystem_list_files, register_printer_emergency_stop, register_printer_firmware_restart, register_printer_restart, register_temperature_set_new_target_temperature, register_util_format_bytes, register_util_image_exists, register_util_prettify_name}};
 
@@ -67,7 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ),
     );
     let ui = init_display(&config.display)?;
-    ui.global::<AppState>().set_moonraker_connected(false);
+    ui.global::<Webhooks>().set_moonraker_connected(false);
     let ui_weak = ui.as_weak();
     let mut event_loop = EventLoop::new(ui_weak.clone(), moonraker_connection.clone());
 

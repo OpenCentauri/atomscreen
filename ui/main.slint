@@ -1,724 +1,21 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider, ComboBox, TabWidget } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, Heater, DisplayStatus, TemperatureSensor, PrinterAdministration, GcodeCommands } from "state.slint";
+import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks } from "state.slint";
+import { Heater, TemperatureSensor, MoonrakerFile } from "types.slint";
+import { Icons } from "constants.slint";
+import { Page } from "components/page.slint";
+import { InteractableTemperatureElement, TemperaturePage } from "pages/temperature-page.slint";
+import { SmallButton } from "components/small-button.slint";
+import { IconButton, LeftSideIconButton, RightSideIconButton } from "components/icon-button.slint";
+import { TemperatureEntry } from "components/number-pad.slint";
+import { TopBar } from "components/top-bar.slint";
+import { FileListPage } from "pages/file-list-page.slint";
+import { BottomBarWithStatusMessage } from "components/bottom-bar.slint";
+import { YesNoPrompt } from "components/yes-no-prompt.slint";
 export * from "state.slint";
 
-component Page inherits Rectangle {
-    in property <string> header <=> h.text;
-    width: 100%; 
-    height: 100%;
 
-    VerticalLayout {
-        width: 100%;
-        height: 100%;
-        HorizontalLayout { 
-            x: 10px;
-            h := Text {
-                font-weight: 900;
-                horizontal-alignment: left;
-                y: 2px;
-            }
-            padding-bottom: 4px;
-            vertical-stretch: 0;
-        }
-
-        GridLayout {
-            padding: StyleMetrics.layout-padding / 2;
-            Rectangle {
-                vertical-stretch: 1;
-                @children
-            }
-        }
-    }
-}
-
-component PageOne inherits Page {
-    header: "This is page 1";
-
-    Rectangle {
-
-        //Text { text: "This is page 2"; }
-        ProgressIndicator {
-            indeterminate: true;
-            width: 200px;
-        }
-    }
-}
-
-component PageTwo inherits Page {
-    header: "This is page 2";
-
-    VerticalLayout {
-        Text {
-            text: "Hello!";
-        }
-        Rectangle {
-            background: #ff0000;
-        }
-        Rectangle {
-            background: #00ff00;
-        }
-        Rectangle {
-            background: #0000ff;
-        }
-    }
-}
-
-component PageThree inherits Page {
-    header: "This is page 3";
-
-    ScrollView {
-        VerticalLayout {
-            for t in [ "Hello", "World", "!", "!", "!", "!", "!", "!", "hello atom", ":)", "why", "does", "this", "have", "to", "be", "so", "long?", "a", "b", "c" ] : Text {
-                text: t;
-            }
-            Rectangle {
-                background: #ff0000;
-                height: 100px;
-            }
-            Rectangle {
-                background: #00ff00;
-                height: 100px;
-            }
-            Rectangle {
-                background: #0000ff;
-                height: 100px;
-            }
-        }
-    }
-
-}
-
-component IconButton inherits Rectangle {
-    in property <image> icon <=> img.source;
-    in property <bool> checked: false;
-    in property <brush> foreground: checked ? Palette.accent-foreground : Palette.foreground;
-    in property <brush> bg: checked ? Palette.accent-background : Palette.background;
-
-    states [
-        pressed when touch-area.pressed : {
-            root.opacity: 0.5;
-        }
-    ]
-
-    callback clicked();
-
-    background: bg;
-
-    img := Image {
-        horizontal-alignment: center;
-        vertical-alignment: center;
-        colorize: foreground;
-    }
-
-    touch-area := TouchArea {
-        clicked => { root.clicked(); }
-    }
-}
-
-component RightSideIconButton inherits IconButton {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-top-right-radius: StyleMetrics.layout-padding;
-    border-bottom-right-radius: StyleMetrics.layout-padding;
-}
-
-component LeftSideIconButton inherits IconButton {
-    border-top-left-radius: StyleMetrics.layout-padding;
-    border-bottom-left-radius: StyleMetrics.layout-padding;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-component TopBar inherits Rectangle {
-    height: 20px;
-    width: 100%;
-    background: Palette.alternate-background;
-
-    HorizontalLayout {
-        padding-top: 2px;
-        padding-left: 10px;
-        padding-right: 10px;
-        spacing: 10px;
-        Text {
-            text: "Printer: Idle";
-            color: Palette.alternate-foreground;
-            font-weight: 900;
-            horizontal-stretch: 0;
-        }
-
-        Rectangle {
-            horizontal-stretch: 1;
-        }
-
-        HorizontalLayout {
-            Image {
-                source: @image-url("assets/extruder.svg");
-                colorize: Palette.alternate-foreground;
-            }
-            Text {
-                text: TemperatureSensors.extruder.target > 0
-                    ? TemperatureSensors.extruder.temperature + "°C / " + TemperatureSensors.extruder.target + "°C"
-                    : TemperatureSensors.extruder.temperature + "°C";
-                color: Palette.alternate-foreground;
-                font-weight: 900;
-            }
-        }
-        
-        if TemperatureSensors.heated_bed.name != "": HorizontalLayout {
-            Image {
-                source: @image-url("assets/bed.svg");
-                colorize: Palette.alternate-foreground;
-            }
-            Text {
-                text: TemperatureSensors.heated_bed.target > 0
-                    ? TemperatureSensors.heated_bed.temperature + "°C / " + TemperatureSensors.heated_bed.target + "°C"
-                    : TemperatureSensors.heated_bed.temperature + "°C";
-                color: Palette.alternate-foreground;
-                font-weight: 900;
-            }
-        }
-
-    }
-}
-
-
-export struct MoonrakerFileTest
-{
-    path: string,
-    modified: float,
-    size: int,
-    permissions: string,
-    thumbnail: image,
-}
-
-export global AppState
-{
-    in-out property <bool> moonraker_connected: false;
-    in-out property <string> klipper_state: "-";
-    in-out property <string> klipper_state_message: "-";
-}
-
-export global Filesystem 
-{
-    callback list_files();
-    callback download_thumbnail(index : int);
-    in-out property <[MoonrakerFileTest]> files: [{
-        path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",
-    }, {
-        path: "a-really-really-really-really-really-really-really-really-really-long-name.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--"
-    }];
-    in-out property <bool> loading: false;
-}
-
-export global Utils
-{
-    pure callback image_exists(image: image) -> bool;  
-    pure callback format_bytes(size: int) -> string;
-    pure callback prettify_name(name: string) -> string;
-}
-
-component FileListView inherits Rectangle 
-{
-    property <MoonrakerFileTest> selected_file;
-    property <int> thumbnail_index: 0;
-
-    init() => {
-        Filesystem.list_files();
-    }
-
-    if Filesystem.loading: ProgressIndicator {
-        indeterminate: true;
-        width: 200px;
-    }
-
-    if !Filesystem.loading && selected_file.path == "": ScrollView {
-        VerticalLayout {
-            for f in Filesystem.files: VerticalLayout {
-                height: 40px;
-                width: 100%;
-                Rectangle {
-                    TouchArea {
-                        clicked => { root.selected_file = f; }
-                    }
-                    HorizontalLayout {
-                        spacing: 10px;
-                        padding: 5px;
-                        Image {
-                            source: Utils.image_exists(f.thumbnail) ? f.thumbnail : @image-url("assets/file.svg");
-                            colorize: Utils.image_exists(f.thumbnail) ? transparent : Palette.foreground;
-                            vertical-alignment: center;
-                            horizontal-alignment: center;
-                            width: 32px;
-                        }
-                        Text { text: f.path; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
-                        Text { text: Utils.format_bytes(f.size); horizontal-alignment: right; vertical-alignment: center; }
-                    }
-                }
-                Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
-            }
-        }
-    }
-
-    if selected_file.path != "": Rectangle {
-        height: 100%;
-        width: 100%;
-
-        VerticalLayout {
-            Text { text: "File: " + selected_file.path; font-weight: 900; overflow: elide; }
-            Text { text: "Size: " + Utils.format_bytes(selected_file.size); }
-            Text { text: "Modified: " + selected_file.modified; }
-            Text { text: "Permissions: " + selected_file.permissions; }
-            Button { text: "Close"; clicked => { root.selected_file = {}; Filesystem.download_thumbnail(thumbnail_index); thumbnail_index += 1; } }
-        }
-    }
-}
-
-component SmallButton inherits Rectangle {
-    in property <string> text;
-    in property <image> icon;
-    callback clicked();
-
-    background: Palette.control-background;
-    border-radius: 20px;
-
-    states [
-        pressed when touch-area.pressed : {
-            root.opacity: 0.5;
-        }
-    ]
-
-    GridLayout {
-        padding-left: 10px;
-        padding-right: 10px;
-    
-        Rectangle {
-            touch-area := TouchArea {
-                clicked => { root.clicked(); }
-            }
-
-            HorizontalLayout {
-                spacing: 10px;
-                alignment: center;
-                if Utils.image_exists(root.icon) : Image {
-                    source: root.icon;
-                    colorize: Palette.control-foreground;
-                    vertical-alignment: center;
-                }
-
-                Text {
-                    text: root.text;
-                    color: Palette.control-foreground;
-                    vertical-alignment: center;
-                    font-size: 12px;
-                }
-            }
-        }
-    }
-}
-
-component InteractableTemperatureElement {
-    in property <Heater> heater;
-    property <int> target: heater.target;
-    property <string> friendly_name: Utils.prettify_name(heater.name);
-    in property <bool> hide_temp_control: false;
-
-    changed heater => {
-        target = heater.target;
-    }
-
-    callback on_manual_entry(internal_name: string, friendly_name: string);
-
-    VerticalLayout {
-        spacing: 10px;
-        HorizontalLayout {
-            height: 30px;
-            spacing: 10px;
-
-            Image {
-                colorize: Palette.foreground;
-                source: heater.name == "extruder"
-                    ? @image-url("assets/extruder.svg")
-                    : heater.name == "heater_bed"
-                        ? @image-url("assets/bed.svg")
-                        : @image-url("assets/fan.svg"); // TODO: Do temp sensor
-            }
-
-            Text {
-                text: friendly_name;
-                horizontal-stretch: 1;
-                vertical-alignment: center;
-                overflow: elide;
-            }
-
-            Text {
-                text: target > 0
-                    ? heater.temperature + "°C -> " + target + "°C"
-                    : heater.temperature + "°C";
-                vertical-alignment: center;
-                font-weight: 900;
-            }
-        }
-
-        @children
-
-        if !hide_temp_control: HorizontalLayout {
-            spacing: 10px;
-            height: 30px;
-            SmallButton {
-                text: "Off";
-                clicked => { 
-                    TemperatureSensors.set_new_target_temperature(heater.name, 0);
-                }   
-            }
-            for preset in heater.presets : SmallButton {
-                text: preset + "°C";
-                clicked => { 
-                    TemperatureSensors.set_new_target_temperature(heater.name, preset);
-                }   
-            }
-            SmallButton {
-                text: "Set";
-                clicked => { 
-                    on_manual_entry(heater.name, friendly_name);
-                }
-            }
-        }
-
-        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; }
-    }
-}
-
-component ReadOnlyTemperatureElement
-{
-    in property <TemperatureSensor> temperature_sensor;
-
-    VerticalLayout {
-        HorizontalLayout {
-            height: 40px;
-            spacing: 10px;
-
-            Image {
-                colorize: Palette.foreground;
-                source: @image-url("assets/device_temperature.svg");
-            }
-
-            Text {
-                text: Utils.prettify_name(temperature_sensor.name);
-                horizontal-stretch: 1;
-                vertical-alignment: center;
-                overflow: elide;
-            }
-
-            Text {
-                text: temperature_sensor.temperature + "°C";
-                vertical-alignment: center;
-                font-weight: 900;
-            }
-        }
-        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
-    }
-}
-
-component NumberPad inherits Rectangle 
-{
-    in property <string> name;
-    callback accept(number: int);
-    callback cancel();
-    property <int> current-number: 0;
-
-    function add(key: int) {
-        if (current-number * 10 + key > 999) {
-            return;
-        }
-
-        current-number = current-number * 10 + key;
-    }
-
-    function remove() {
-        current-number = floor(current-number / 10);
-    }
-
-    VerticalLayout {
-        spacing: 5px;
-        
-        HorizontalLayout {
-            spacing: 5px;
-            vertical-stretch: 1;
-            
-            Text {
-                text: name + ": " + current-number;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                font-size: 20px;
-                font-weight: 900;
-                horizontal-stretch: 5;
-            }
-
-            VirtualKeyboardButton { icon: @image-url("assets/backspace.svg"); key-pressed => { remove(); } horizontal-stretch: 1; }
-        }
-
-        HorizontalLayout {
-            spacing: 5px;
-            vertical-stretch: 1;
-            VirtualKeyboardButton { key: "1"; key-pressed => { add(1) } }
-            VirtualKeyboardButton { key: "2"; key-pressed => { add(2) } }
-            VirtualKeyboardButton { key: "3"; key-pressed => { add(3) } }
-            VirtualKeyboardButton { icon: @image-url("assets/check.svg"); key-pressed => { accept(current-number); current-number = 0; } }
-        }
-
-        HorizontalLayout {
-            spacing: 5px;
-            vertical-stretch: 1;
-            VirtualKeyboardButton { key: "4"; key-pressed => { add(4) } }
-            VirtualKeyboardButton { key: "5"; key-pressed => { add(5) } }
-            VirtualKeyboardButton { key: "6"; key-pressed => { add(6) } }
-            VirtualKeyboardButton { icon: @image-url("assets/close.svg"); key-pressed => { cancel(); } }
-        }
-
-        HorizontalLayout {
-            spacing: 5px;
-            vertical-stretch: 1;
-            VirtualKeyboardButton { key: "7"; key-pressed => { add(7) } }
-            VirtualKeyboardButton { key: "8"; key-pressed => { add(8) } }
-            VirtualKeyboardButton { key: "9"; key-pressed => { add(9) } }
-            VirtualKeyboardButton { key: "0"; key-pressed => { add(0) } }
-        }
-    }
-}
-
-component TemperatureEntry
-{
-    out property <bool> is_keyboard_open: false;
-    property <string> internal_temp_device_name;
-    property <string> friendly_temp_device_name;
-
-    public function open_keyboard(internal_name: string, friendly_name: string) {
-        internal_temp_device_name = internal_name;
-        friendly_temp_device_name = friendly_name;
-        is_keyboard_open = true;
-    }
-
-    width: 100%;
-    height: 100%;
-
-    if is_keyboard_open: GridLayout {
-        padding-left: StyleMetrics.layout-padding / 2;
-        padding-right: StyleMetrics.layout-padding / 2;
-        NumberPad {
-            name: friendly_temp_device_name;
-            accept(number) => {
-                TemperatureSensors.set_new_target_temperature(internal_temp_device_name, number);
-                is_keyboard_open = false;
-            }
-            cancel() => {
-                is_keyboard_open = false;
-            }
-        }
-    }
-}
-
-component TemperaturePage inherits Page {
-    header: "Temperature";
-
-    property <int> selection : 0;
-
-    ScrollView {
-        VerticalLayout {
-            InteractableTemperatureElement { 
-                heater: TemperatureSensors.extruder; 
-                on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
-                hide_temp_control: selection != 0;
-/*
-                HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    SmallButton {
-                        icon: @image-url("assets/eject.svg");
-                        text: "Retract";
-                    }
-                    SmallButton {
-                        icon: @image-url("assets/arrow-down.svg");
-                        text: "Extrude";
-                    }
-                }
-
-                HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    SmallButton {
-                        text: "Load filament";
-                    }
-                    SmallButton {
-                        text: "Unload filament";
-                    }
-                }
-*/
-                // TODO: Split off into component
-                // TODO: Find a better way to do those checks
-                HorizontalLayout {
-                    height: 30px;
-                    SmallButton {
-                        border-radius: 0;
-                        background: selection == 0 ? Palette.control-background : transparent;
-                        text: "Temperature";
-                        clicked => { selection = 0; }
-                    }
-                    if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: SmallButton {
-                        border-radius: 0;
-                        background: selection == 1 ? Palette.control-background : transparent;
-                        text: "Extrude/Retract";
-                        clicked => { selection = 1; }
-                    }
-                    if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: SmallButton {
-                        border-radius: 0;
-                        background: selection == 2 ? Palette.control-background : transparent;
-                        text: "Load/Unload";
-                        clicked => { selection = 2; }
-                    }
-                }
-
-                if selection == 1: HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    if GcodeCommands.extruder_retract_available: SmallButton {
-                        icon: @image-url("assets/eject.svg");
-                        text: "Retract";
-                        clicked => { GcodeCommands.extruder_retract(); }
-                    }
-                    if GcodeCommands.extruder_extrude_available:SmallButton {
-                        icon: @image-url("assets/arrow-down.svg");
-                        text: "Extrude";
-                        clicked => { GcodeCommands.extruder_extrude(); }
-                    }
-                }
-
-                if selection == 2: HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    if GcodeCommands.extruder_unload_filament_available: SmallButton {
-                        text: "Unload filament";
-                        clicked => { GcodeCommands.extruder_unload_filament(); }
-                    }
-                    if GcodeCommands.extruder_load_filament_available: SmallButton {
-                        text: "Load filament";
-                        clicked => { GcodeCommands.extruder_load_filament(); }
-                    }
-                }
-            }
-
-            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); }}
-            for temp_fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp_fan.heater;on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
-            for temp_sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { temperature_sensor: temp_sensor;  }
-        }
-
-        visible: !t.is_keyboard_open;
-    }
-
-    t := TemperatureEntry {
-
-    }
-}
-
-component PageFour inherits Page {
-    header: "Files";
-
-    FileListView {
-        width: 100%;
-        height: 100%;
-    }
-}
-
-component BottomBar inherits Rectangle {
-    height: 20px;
-    width: 100%;
-    background: Palette.alternate-background;
-    in property <string> text;
-
-    HorizontalLayout {
-        Text {
-            text: text;
-            horizontal-alignment: center;
-            vertical-alignment: center;
-            color: Palette.alternate-foreground;
-        }
-    }
-}
-
-component GhostButton inherits VerticalLayout {
-    in property <string> text;
-    in property <color> text-color: Palette.foreground;
-    callback clicked;
-
-    Rectangle {
-        height: t.height * 2;
-        min-width: t.width * 1.5;
-        //background: red;
-
-        t := Text {
-            text: text;
-            color: text-color;
-            font-weight: 600;
-        }
-
-        TouchArea {
-            clicked => { root.clicked(); }
-        }
-    }
-}
-
-component YesNoPrompt inherits Rectangle 
-{
-    in property <string> title <=> title_text.text;
-    in property <string> message;
-
-    callback yes();
-    callback no();
-    border-radius: 20px;
-    background: Palette.background;
-
-    VerticalLayout {
-        spacing: 20px;
-        padding: StyleMetrics.layout-padding * 1.5; 
-
-        title_text := Text {
-            color: Palette.foreground;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        if message != "": title_message := Text {
-            text: message;
-            color: Palette.foreground;
-            wrap: word-wrap;
-        }
-
-        Rectangle {}
-
-        HorizontalLayout {
-            spacing: 10px;
-
-            Rectangle {
-                horizontal-stretch: 1;
-            }
-            
-            GhostButton {
-                text: "No";
-                width: 60px;
-                text-color: Palette.accent-background;
-                clicked => { root.no(); }
-            }
-
-            GhostButton {
-                text: "Yes";
-                width: 60px;
-                text-color: Palette.accent-background;
-                clicked => { root.yes(); }
-            }
-        }
-    }
-}
 
 component ExtruderPage inherits Page {
     header: "Extruder";
@@ -786,10 +83,11 @@ component ExtruderPage inherits Page {
     }
 }
 
-component MainView
+component MainView inherits Rectangle
 {
     in-out property <int> current-page: 0;
     property <bool> is_emergency_prompt_open: false;
+    background: Palette.alternate-background;
 
     VerticalLayout { 
         TopBar {
@@ -798,50 +96,40 @@ component MainView
 
         HorizontalLayout {
             VerticalLayout {
-                spacing: 5px;
-                horizontal-stretch: 0;
                 min-width: 50px;
-                LeftSideIconButton { icon: @image-url("assets/print.svg"); checked: root.current-page == 0; clicked => { root.current-page = 0; } }
-                LeftSideIconButton { icon: @image-url("assets/temperature.svg"); checked: root.current-page == 1; clicked => { root.current-page = 1; } }
-                LeftSideIconButton { icon: @image-url("assets/move.svg"); checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                LeftSideIconButton { icon: @image-url("assets/emergency.svg"); checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
-            }
+                spacing: 5px;
 
-            Rectangle {
-                width: 1px;
-                background: Palette.border;
+                LeftSideIconButton { icon: Icons.print; checked: root.current-page == 0; clicked => { root.current-page = 0; } }
+                LeftSideIconButton { icon: Icons.temperature; checked: root.current-page == 1; clicked => { root.current-page = 1; } }
+                LeftSideIconButton { icon: Icons.move; checked: root.current-page == 2; clicked => { root.current-page = 2; } }
+                LeftSideIconButton { icon: Icons.emergency_stop; checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
             }
 
             Rectangle { 
                 horizontal-stretch: 1;
-
-                //PageOne { visible: root.current-page == 0;  }
-                //PageTwo { visible: root.current-page == 1;  }
-                PageThree { visible: root.current-page == 2;  }
-                if root.current-page == 1: TemperaturePage { }
-                if root.current-page == 0: PageFour { }
+                background: Palette.background;
+                border-top-left-radius: StyleMetrics.layout-padding / 2;
+                border-top-right-radius: StyleMetrics.layout-padding / 2;
+                border-bottom-left-radius: DisplayStatus.message == "" ? 0 : StyleMetrics.layout-padding / 2;
+                border-bottom-right-radius: DisplayStatus.message == "" ? 0 : StyleMetrics.layout-padding / 2;
+                
+                if root.current-page == 1: TemperaturePage {}
+                if root.current-page == 0: FileListPage  {}
                 if root.current-page == 6: ExtruderPage {}
-            }
-
-            Rectangle {
-                width: 1px;
-                background: Palette.border;
             }
 
             VerticalLayout {
                 spacing: 5px;
-                horizontal-stretch: 0;
                 min-width: 50px;
-                RightSideIconButton { icon: @image-url("assets/fan.svg"); checked: root.current-page == 4; clicked => { root.current-page = 4; } }
-                RightSideIconButton { icon: @image-url("assets/quickaction.svg"); checked: root.current-page == 5; clicked => { root.current-page = 5; }}
-                RightSideIconButton { icon: @image-url("assets/extruder.svg"); checked: root.current-page == 6; clicked => { root.current-page = 6; } }
-                RightSideIconButton { icon: @image-url("assets/settings.svg"); checked: root.current-page == 7; clicked => { root.current-page = 7; } }
+
+                RightSideIconButton { icon: Icons.fan; checked: root.current-page == 4; clicked => { root.current-page = 4; } }
+                RightSideIconButton { icon: Icons.quick_action; checked: root.current-page == 5; clicked => { root.current-page = 5; }}
+                RightSideIconButton { icon: Icons.console; checked: root.current-page == 6; clicked => { root.current-page = 6; } }
+                RightSideIconButton { icon: Icons.settings; checked: root.current-page == 7; clicked => { root.current-page = 7; } }
             }
         }
 
-        if DisplayStatus.message != "": BottomBar {
-            text: DisplayStatus.message;
-        }
+        BottomBarWithStatusMessage { }
     }
 
     // TODO: Split this into a component
@@ -876,12 +164,12 @@ export component AppWindow inherits Window {
 
     default-font-family: "Adwaita Sans";
 
-    if AppState.moonraker_connected && AppState.klipper_state == "Ready" : MainView {
+    if Webhooks.moonraker_connected && Webhooks.klipper_state == "Ready" : MainView {
         width: 100%;
         height: 100%;
     }
 
-    if AppState.moonraker_connected && AppState.klipper_state != "Ready" && AppState.klipper_state != "" : VerticalLayout {
+    if Webhooks.moonraker_connected && Webhooks.klipper_state != "Ready" && Webhooks.klipper_state != "" : VerticalLayout {
         width: 100%;
         spacing: 20px;
         Rectangle {}
@@ -891,15 +179,15 @@ export component AppWindow inherits Window {
                 spacing: 20px;
                 alignment: center;
                 Text {
-                    text: AppState.klipper_state;
+                    text: Webhooks.klipper_state;
                     font-weight: 900;
                     horizontal-alignment: center;
                 }
                 Text {
-                    text: AppState.klipper_state_message;
+                    text: Webhooks.klipper_state_message;
                     horizontal-alignment: center;
                 }
-                if AppState.klipper_state == "Error" || AppState.klipper_state == "Shutdown": HorizontalLayout {
+                if Webhooks.klipper_state == "Error" || Webhooks.klipper_state == "Shutdown": HorizontalLayout {
                     spacing: 20px;
                     Button {
                         text: "Restart";
@@ -915,7 +203,7 @@ export component AppWindow inherits Window {
         Rectangle {}
     }
 
-    if !AppState.moonraker_connected || AppState.klipper_state == "": VerticalLayout
+    if !Webhooks.moonraker_connected || Webhooks.klipper_state == "": VerticalLayout
     {
         VerticalLayout {
             width: 100%;
@@ -943,24 +231,4 @@ export component AppWindow inherits Window {
             }
         }
     }
-
-/*
-    keyboard := VirtualKeyboard {
-        y: parent.height - self.height;
-    }
-*/
-    /*
-    VerticalLayout {
-        HorizontalLayout {
-            Button { text: "Page 1"; clicked => { root.current-page = 0; } checked: root.current-page == 0; icon: @image-url("assets/print.svg"); }
-            Button { text: "Page 2"; clicked => { root.current-page = 1; } checked: root.current-page == 1; }
-            Button { text: "Page 3"; clicked => { root.current-page = 2; } checked: root.current-page == 2;}
-            
-        }
-
-        Rectangle { 
-            PageOne { visible: root.current-page == 0;  }
-        }
-    }
-    */
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use moonraker_rs::{connector::websocket_read::{MoonrakerEvent, PrinterEvent}, moonraker_connection::{MoonrakerConnection, WebsocketEvent}};
 use slint::{ComponentHandle, Weak};
 
-use crate::{application_error::ApplicationError, AppState, AppWindow};
+use crate::{application_error::ApplicationError, Webhooks, AppWindow};
 
 pub struct EventLoop
 {
@@ -60,7 +60,7 @@ impl EventLoop
     async fn on_connected(&mut self) -> Result<(), ApplicationError>
     {
         self.ui_weak
-            .upgrade_in_event_loop(move |ui| ui.global::<AppState>().set_moonraker_connected(true))?;
+            .upgrade_in_event_loop(move |ui| ui.global::<Webhooks>().set_moonraker_connected(true))?;
 
         Ok(())
     }
@@ -69,9 +69,9 @@ impl EventLoop
     {
         self.ui_weak
             .upgrade_in_event_loop(move |ui| {
-                ui.global::<AppState>().set_moonraker_connected(false);
-                ui.global::<AppState>().set_klipper_state("".into());
-                ui.global::<AppState>().set_klipper_state_message("".into());
+                ui.global::<Webhooks>().set_moonraker_connected(false);
+                ui.global::<Webhooks>().set_klipper_state("".into());
+                ui.global::<Webhooks>().set_klipper_state_message("".into());
             })?;
 
         Ok(())

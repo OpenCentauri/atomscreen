@@ -1,0 +1,63 @@
+import { MoonrakerFile } from "../types.slint";
+import { Filesystem, Utils } from "../state.slint";
+import { ProgressIndicator, ScrollView, Button, Palette } from "std-widgets.slint";
+import { Page } from "../components/page.slint";
+import { Icons } from "../constants.slint";
+
+export component FileListPage inherits Page 
+{
+    header: "Files";
+
+    property <MoonrakerFile> selected_file;
+    property <int> thumbnail_index: 0;
+
+    init() => {
+        Filesystem.list_files();
+    }
+
+    if Filesystem.loading: ProgressIndicator {
+        indeterminate: true;
+        width: 200px;
+    }
+
+    if !Filesystem.loading && selected_file.path == "": ScrollView {
+        VerticalLayout {
+            for f in Filesystem.files: VerticalLayout {
+                height: 40px;
+                width: 100%;
+                Rectangle {
+                    TouchArea {
+                        clicked => { root.selected_file = f; }
+                    }
+                    HorizontalLayout {
+                        spacing: 10px;
+                        padding: 5px;
+                        Image {
+                            source: Utils.image_exists(f.thumbnail) ? f.thumbnail : Icons.file;
+                            colorize: Utils.image_exists(f.thumbnail) ? transparent : Palette.foreground;
+                            vertical-alignment: center;
+                            horizontal-alignment: center;
+                            width: 32px;
+                        }
+                        Text { text: f.path; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
+                        Text { text: Utils.format_bytes(f.size); horizontal-alignment: right; vertical-alignment: center; }
+                    }
+                }
+                Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+            }
+        }
+    }
+
+    if selected_file.path != "": Rectangle {
+        height: 100%;
+        width: 100%;
+
+        VerticalLayout {
+            Text { text: "File: " + selected_file.path; font-weight: 900; overflow: elide; }
+            Text { text: "Size: " + Utils.format_bytes(selected_file.size); }
+            Text { text: "Modified: " + selected_file.modified; }
+            Text { text: "Permissions: " + selected_file.permissions; }
+            Button { text: "Close"; clicked => { root.selected_file = {}; Filesystem.download_thumbnail(thumbnail_index); thumbnail_index += 1; } }
+        }
+    }
+}

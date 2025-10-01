@@ -1,0 +1,28 @@
+export struct TemperatureSensor
+{
+    name: string,
+    temperature: int,
+}
+
+export struct Heater 
+{
+    name: string,
+    temperature: int,
+    target: int,
+    presets: [int]
+}
+
+export struct HeaterFan
+{
+    speed: float,
+    heater: Heater,
+}
+
+export struct MoonrakerFile
+{
+    path: string,
+    modified: float,
+    size: int,
+    permissions: string,
+    thumbnail: image,
+}

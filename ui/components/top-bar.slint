@@ -1,0 +1,52 @@
+import { Palette, StyleMetrics } from "std-widgets.slint";
+import { Icons } from "../constants.slint";
+import { TemperatureSensors } from "../state.slint";
+
+export component TopBar inherits Rectangle {
+    height: 20px;
+    width: 100%;
+    background: Palette.alternate-background;
+
+    HorizontalLayout {
+        padding-top: 2px;
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 10px;
+        Text {
+            text: "Printer: Idle";
+            color: Palette.alternate-foreground;
+            horizontal-stretch: 0;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        HorizontalLayout {
+            Image {
+                source: Icons.extruder;
+                colorize: Palette.alternate-foreground;
+            }
+            Text {
+                text: TemperatureSensors.extruder.target > 0
+                    ? TemperatureSensors.extruder.temperature + "°C / " + TemperatureSensors.extruder.target + "°C"
+                    : TemperatureSensors.extruder.temperature + "°C";
+                color: Palette.alternate-foreground;
+            }
+        }
+        
+        if TemperatureSensors.heated_bed.name != "": HorizontalLayout {
+            Image {
+                source: Icons.bed;
+                colorize: Palette.alternate-foreground;
+            }
+            Text {
+                text: TemperatureSensors.heated_bed.target > 0
+                    ? TemperatureSensors.heated_bed.temperature + "°C / " + TemperatureSensors.heated_bed.target + "°C"
+                    : TemperatureSensors.heated_bed.temperature + "°C";
+                color: Palette.alternate-foreground;
+            }
+        }
+
+    }
+}

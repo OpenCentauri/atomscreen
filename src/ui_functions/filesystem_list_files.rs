@@ -3,7 +3,7 @@ use std::{cmp::Ordering, rc::Rc, sync::Arc};
 use moonraker_rs::{moonraker_connection::MoonrakerConnection, requests::FileManagementRequestHandler};
 use slint::{ComponentHandle, Image, ModelRc, SharedString, VecModel};
 
-use crate::{AppWindow, Filesystem, MoonrakerFileTest};
+use crate::{AppWindow, Filesystem, MoonrakerFile};
 
 pub fn register_filesystem_list_files(ui : &AppWindow, moonraker_connection : &Arc<MoonrakerConnection>)
 {
@@ -41,9 +41,9 @@ pub fn register_filesystem_list_files(ui : &AppWindow, moonraker_connection : &A
 
             let ui = ui_weak.upgrade().unwrap();
 
-            let converted_files: Vec<MoonrakerFileTest> = files
+            let converted_files: Vec<MoonrakerFile> = files
                 .iter()
-                .map(|f| MoonrakerFileTest {
+                .map(|f| MoonrakerFile {
                     path: SharedString::from(&f.path),
                     modified: f.modified,
                     size: f.size,

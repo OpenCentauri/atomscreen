@@ -1,0 +1,42 @@
+import { Palette, StyleMetrics } from "std-widgets.slint";
+
+export component IconButton inherits Rectangle {
+    in property <image> icon <=> img.source;
+    in property <bool> checked: false;
+    in property <brush> foreground: checked ? Palette.accent-foreground : Palette.foreground;
+    in property <brush> bg: checked ? Palette.accent-background : transparent;
+
+    states [
+        pressed when touch-area.pressed : {
+            root.opacity: 0.5;
+        }
+    ]
+
+    callback clicked();
+
+    background: bg;
+
+    img := Image {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        colorize: foreground;
+    }
+
+    touch-area := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component RightSideIconButton inherits IconButton {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: StyleMetrics.layout-padding;
+    border-bottom-right-radius: StyleMetrics.layout-padding;
+}
+
+export component LeftSideIconButton inherits IconButton {
+    border-top-left-radius: StyleMetrics.layout-padding;
+    border-bottom-left-radius: StyleMetrics.layout-padding;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}

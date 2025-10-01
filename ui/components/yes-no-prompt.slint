@@ -1,0 +1,54 @@
+import { GhostButton } from "ghost-button.slint";
+import { Palette, StyleMetrics } from "std-widgets.slint";
+
+export component YesNoPrompt inherits Rectangle 
+{
+    in property <string> title <=> title_text.text;
+    in property <string> message;
+
+    callback yes();
+    callback no();
+    border-radius: 20px;
+    background: Palette.background;
+
+    VerticalLayout {
+        spacing: 20px;
+        padding: StyleMetrics.layout-padding * 1.5; 
+
+        title_text := Text {
+            color: Palette.foreground;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        if message != "": title_message := Text {
+            text: message;
+            color: Palette.foreground;
+            wrap: word-wrap;
+        }
+
+        Rectangle {}
+
+        HorizontalLayout {
+            spacing: 10px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+            
+            GhostButton {
+                text: "No";
+                width: 60px;
+                text-color: Palette.accent-background;
+                clicked => { root.no(); }
+            }
+
+            GhostButton {
+                text: "Yes";
+                width: 60px;
+                text-color: Palette.accent-background;
+                clicked => { root.yes(); }
+            }
+        }
+    }
+}
