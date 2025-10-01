@@ -60,4 +60,6 @@ export global Utils
     pure callback image_exists(image: image) -> bool;  
     pure callback format_bytes(size: int) -> string;
     pure callback prettify_name(name: string) -> string;
+    pure callback create_temperature_lists(presets: [int]) -> [string];
+    pure callback convert_temperature_back(preset : string) -> int;
 }
