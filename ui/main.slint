@@ -1,7 +1,7 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider, ComboBox, TabWidget } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks } from "state.slint";
+import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks, UiSettings } from "state.slint";
 import { Heater, TemperatureSensor, MoonrakerFile } from "types.slint";
 import { Icons } from "constants.slint";
 import { Page } from "components/page.slint";
@@ -89,20 +89,34 @@ component MainView inherits Rectangle
     property <bool> is_emergency_prompt_open: false;
     background: Palette.alternate-background;
 
+
+
     VerticalLayout { 
         TopBar {
 
         }
 
         HorizontalLayout {
-            VerticalLayout {
+            if UiSettings.left-sidebar.length > 0: VerticalLayout {
                 min-width: 50px;
                 spacing: 5px;
 
-                LeftSideIconButton { icon: Icons.print; checked: root.current-page == 0; clicked => { root.current-page = 0; } }
-                LeftSideIconButton { icon: Icons.temperature; checked: root.current-page == 1; clicked => { root.current-page = 1; } }
-                LeftSideIconButton { icon: Icons.move; checked: root.current-page == 2; clicked => { root.current-page = 2; } }
-                LeftSideIconButton { icon: Icons.emergency_stop; checked: root.current-page == 3; clicked => { is_emergency_prompt_open = true;  } foreground: red; }
+                for component in UiSettings.left-sidebar: LeftSideIconButton {
+                    icon: UiSettings.id-to-image[component];
+                    checked: root.current-page == component;
+                    clicked => { 
+                        if (component == 3) { 
+                            is_emergency_prompt_open = true;
+                        } else {
+                            current-page = component;
+                        }
+                    }
+                    foreground: component == 3 
+                        ? red
+                        : root.current-page == component 
+                            ? Palette.accent-foreground 
+                            : Palette.foreground;
+                }
             }
 
             Rectangle { 
@@ -118,14 +132,26 @@ component MainView inherits Rectangle
                 if root.current-page == 6: ExtruderPage {}
             }
 
-            VerticalLayout {
+            if UiSettings.right-sidebar.length > 0:VerticalLayout {
                 spacing: 5px;
                 min-width: 50px;
 
-                RightSideIconButton { icon: Icons.fan; checked: root.current-page == 4; clicked => { root.current-page = 4; } }
-                RightSideIconButton { icon: Icons.quick_action; checked: root.current-page == 5; clicked => { root.current-page = 5; }}
-                RightSideIconButton { icon: Icons.console; checked: root.current-page == 6; clicked => { root.current-page = 6; } }
-                RightSideIconButton { icon: Icons.settings; checked: root.current-page == 7; clicked => { root.current-page = 7; } }
+                for component in UiSettings.right-sidebar: RightSideIconButton {
+                    icon: UiSettings.id-to-image[component];
+                    checked: root.current-page == component;
+                    clicked => { 
+                        if (component == 3) { 
+                            is_emergency_prompt_open = true;
+                        } else {
+                            current-page = component;
+                        }
+                    }
+                    foreground: component == 3 
+                        ? red
+                        : root.current-page == component 
+                            ? Palette.accent-foreground 
+                            : Palette.foreground;
+                }
             }
         }
 

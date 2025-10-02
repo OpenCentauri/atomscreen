@@ -1,4 +1,6 @@
 import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile } from "types.slint";
+import { Palette } from "std-widgets.slint";
+import { Icons } from "constants.slint";
 
 export global TemperatureSensors 
 {
@@ -25,10 +27,10 @@ export global PrinterAdministration
 
 export global GcodeCommands
 {
-    in-out property <bool> extruder_extrude_available: false;
-    in-out property <bool> extruder_retract_available: false;
-    in-out property <bool> extruder_load_filament_available: false;
-    in-out property <bool> extruder_unload_filament_available: false;
+    in-out property <bool> extruder_extrude_available: true;
+    in-out property <bool> extruder_retract_available: true;
+    in-out property <bool> extruder_load_filament_available: true;
+    in-out property <bool> extruder_unload_filament_available: true;
 
     callback extruder_extrude();
     callback extruder_retract();
@@ -62,4 +64,19 @@ export global Utils
     pure callback prettify_name(name: string) -> string;
     pure callback create_temperature_lists(presets: [int]) -> [string];
     pure callback convert_temperature_back(preset : string) -> int;
+}
+
+export global UiSettings
+{
+    in-out property <bool> dark-mode;
+    in-out property <[int]> left-sidebar: [0,1,2,3];
+    in-out property <[int]> right-sidebar: [4,5,6,7];
+
+    changed dark-mode => {
+        // TODO: This doesn't work
+        debug("Dark mode changed to ");
+        Palette.color-scheme = dark-mode ? ColorScheme.dark : ColorScheme.light;
+    }
+
+    out property <[image]> id-to-image: [Icons.print, Icons.temperature, Icons.move, Icons.emergency_stop, Icons.fan, Icons.quick_action, Icons.console, Icons.settings];
 }

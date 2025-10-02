@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::config::{MoonrakerConfig, OptionalGcodeCommands};
+use crate::config::{MoonrakerConfig, OptionalGcodeCommands, OptionalUiConfig};
 use moonraker_rs::printer_objects::TemperatureConfiguration;
 use serde::Deserialize;
 
@@ -12,4 +12,5 @@ pub struct Config {
     pub moonraker: Option<MoonrakerConfig>,
     pub heater_presets: Option<HashMap<String, Vec<u32>>>,
     pub gcode_commands: Option<OptionalGcodeCommands>,
+    pub ui: Option<OptionalUiConfig>,
 }

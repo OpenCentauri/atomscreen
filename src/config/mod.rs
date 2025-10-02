@@ -6,6 +6,7 @@ pub mod display_default;
 pub mod display_fb;
 pub mod moonraker;
 pub mod gcode_commands;
+pub mod ui;
 
 pub use cli::*;
 pub use config::*;
@@ -15,3 +16,4 @@ pub use display_default::*;
 pub use display_fb::*;
 pub use moonraker::*;
 pub use gcode_commands::*;
+pub use ui::*;

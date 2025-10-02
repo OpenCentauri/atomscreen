@@ -8,7 +8,7 @@ use moonraker_rs::{
     cache::Cache, connector::{read_deserialize::OptionalPrinterEvent}, printer_objects::{NamedOptionalTemperatureFan, OptionalExtruder, OptionalHeaterBed, OptionalTemperatureFan, TemperatureConfiguration}, 
 };
 
-use crate::{config::{MoonrakerConfig, OptionalGcodeCommands}, event_loop::EventLoop, hardware::init_display, ui_functions::*};
+use crate::{config::{MoonrakerConfig, OptionalGcodeCommands, OptionalUiConfig}, event_loop::EventLoop, hardware::init_display, ui_functions::*};
 
 mod application_error;
 mod config;
@@ -100,6 +100,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     register_extruder_retract(&ui, &moonraker_connection, gcode_command_config);
     register_extruder_load_filament(&ui, &moonraker_connection, gcode_command_config);
     register_extruder_unload_filament(&ui, &moonraker_connection, gcode_command_config);
+
+    let ui_settings = &config.ui.unwrap_or(OptionalUiConfig::default());
+    register_set_ui_settings(&ui, &ui_settings);
 
     tokio::task::block_in_place(|| {
         ui.run().unwrap();

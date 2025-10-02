@@ -9,6 +9,7 @@ pub mod printer_restart;
 pub mod printer_firmware_restart;
 pub mod printer_execute_gcode_command;
 pub mod util_create_temperature_list; 
+pub mod settings_set_ui_settings;
 
 pub use util_format_bytes::*;
 pub use filesystem_download_thumbnail::*;
@@ -21,3 +22,4 @@ pub use printer_restart::*;
 pub use printer_firmware_restart::*;
 pub use printer_execute_gcode_command::*;
 pub use util_create_temperature_list::*;
+pub use settings_set_ui_settings::*;

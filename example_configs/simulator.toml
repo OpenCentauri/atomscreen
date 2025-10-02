@@ -9,3 +9,8 @@ port = 7125
 [heater_presets]
 extruder = [ 200, 240, 280 ]
 heater_bed = [ 60, 70 ]
+
+[ui]
+dark_mode = false
+left_sidebar = ["files", "temperature", "move", "emergency_stop"]
+right_sidebar = ["fan", "macros", "console", "settings"]
