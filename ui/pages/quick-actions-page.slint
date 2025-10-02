@@ -33,7 +33,8 @@ export component QuickActionsPage inherits Page
 {
     header: "Quick Actions";
 
-    ScrollView {
+    // TODO: Power devices
+    Flickable {
         VerticalLayout {
             spacing: StyleMetrics.layout-spacing * 1.5;
             for quick-action in QuickActions.quick-actions: QuickAction { quick-action: quick-action; }

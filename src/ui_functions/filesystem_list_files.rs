@@ -48,18 +48,16 @@ pub fn register_filesystem_list_files(ui : &AppWindow, moonraker_connection : &A
                     modified: f.modified,
                     size: f.size,
                     permissions: SharedString::from(&f.permissions),
-                    thumbnail: Image::default(),
+                    ..MoonrakerFile::default()
                 })
                 .collect();
 
             ui.global::<Filesystem>()
                 .set_files(ModelRc::new(Rc::new(VecModel::from(converted_files))));
             ui.global::<Filesystem>().set_loading(false);
-            ui.global::<Filesystem>().invoke_download_thumbnail(0);
-            ui.global::<Filesystem>().invoke_download_thumbnail(1);
-            ui.global::<Filesystem>().invoke_download_thumbnail(2);
-            ui.global::<Filesystem>().invoke_download_thumbnail(3);
-            ui.global::<Filesystem>().invoke_download_thumbnail(4);
+            for i in 0..5 {
+                ui.global::<Filesystem>().invoke_fetch_metadata(i);
+            }
         })
         .unwrap();
     });

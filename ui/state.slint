@@ -48,7 +48,7 @@ export global Webhooks
 export global Filesystem 
 {
     callback list_files();
-    callback download_thumbnail(index : int);
+    callback fetch_metadata(index : int);
     in-out property <[MoonrakerFile]> files: [{
         path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",
     }, {
@@ -64,6 +64,7 @@ export global Utils
     pure callback prettify_name(name: string) -> string;
     pure callback create_temperature_lists(presets: [int]) -> [string];
     pure callback convert_temperature_back(preset : string) -> int;
+    pure callback time_in_seconds_to_string(time_s: float) -> string;
 }
 
 export global UiSettings

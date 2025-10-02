@@ -258,7 +258,7 @@ impl MoonrakerConnection {
                     else {
                         continue;
                     }
-                }, // TODO: This should eventually end
+                },
             }
         }
     }

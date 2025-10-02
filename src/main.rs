@@ -81,21 +81,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     register_filesystem_list_files(&ui, &moonraker_connection);
-    register_filesystem_download_thumbnails(&ui, &moonraker_connection);
+    register_filesystem_fetch_metadata(&ui, &moonraker_connection);
 
     register_temperature_set_new_target_temperature(&ui, &moonraker_connection);
 
     register_util_image_exists(&ui);
     register_util_format_bytes(&ui);
     register_util_prettify_name(&ui);
-    register_create_temperature_lists(&ui);
-    register_convert_temperature_back(&ui);
+    register_util_time_in_seconds_to_string(&ui);
+    register_util_create_temperature_lists(&ui);
+    register_util_convert_temperature_back(&ui);
 
     register_printer_emergency_stop(&ui, &moonraker_connection);
     register_printer_firmware_restart(&ui, &moonraker_connection);
     register_printer_restart(&ui, &moonraker_connection);
 
-    let gcode_command_config = &config.gcode_commands.unwrap_or(OptionalGcodeCommands::default());
+    let gcode_command_config = &config.gcode_commands.unwrap_or_default();
     register_extruder_extrude(&ui, &moonraker_connection, gcode_command_config);
     register_extruder_retract(&ui, &moonraker_connection, gcode_command_config);
     register_extruder_load_filament(&ui, &moonraker_connection, gcode_command_config);

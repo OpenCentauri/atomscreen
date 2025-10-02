@@ -1,5 +1,5 @@
 pub mod util_format_bytes;
-pub mod filesystem_download_thumbnail;
+pub mod filesystem_fetch_metadata;
 pub mod util_image_exists;
 pub mod filesystem_list_files;
 pub mod util_prettify_name;
@@ -11,9 +11,10 @@ pub mod printer_execute_gcode_command;
 pub mod util_create_temperature_list; 
 pub mod settings_set_ui_settings;
 pub mod quick_action_execute;
+pub mod util_time_in_seconds_to_string;
 
 pub use util_format_bytes::*;
-pub use filesystem_download_thumbnail::*;
+pub use filesystem_fetch_metadata::*;
 pub use util_image_exists::*;
 pub use filesystem_list_files::*;
 pub use util_prettify_name::*;
@@ -25,3 +26,4 @@ pub use printer_execute_gcode_command::*;
 pub use util_create_temperature_list::*;
 pub use settings_set_ui_settings::*;
 pub use quick_action_execute::*;
+pub use util_time_in_seconds_to_string::*;

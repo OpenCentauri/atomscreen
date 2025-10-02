@@ -1,30 +1,13 @@
 import { StyleMetrics } from "std-widgets.slint";
 
 export component Page inherits Rectangle {
-    in property <string> header <=> h.text;
-    width: 100%; 
-    height: 100%;
+    in property <string> header;
 
-    VerticalLayout {
-        width: 100%;
-        height: 100%;
-        HorizontalLayout { 
-            x: 10px;
-            h := Text {
-                font-weight: 900;
-                horizontal-alignment: left;
-                y: 2px;
-            }
-            padding-bottom: 4px;
-            vertical-stretch: 0;
-        }
-
-        GridLayout {
-            padding: StyleMetrics.layout-padding / 2;
-            Rectangle {
-                vertical-stretch: 1;
-                @children
-            }
+    GridLayout {
+        padding: StyleMetrics.layout-padding / 2;
+        Rectangle {
+            vertical-stretch: 1;
+            @children
         }
     }
 }

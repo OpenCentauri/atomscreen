@@ -192,7 +192,7 @@ export component TemperaturePage inherits Page {
     property <bool> is_filament_menu_open: false;
     property <int> selection : 0;
 
-    ScrollView {
+    Flickable {
         VerticalLayout {
             InteractableTemperatureElement { 
                 heater: TemperatureSensors.extruder; 
