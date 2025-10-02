@@ -68,14 +68,15 @@ export global Utils
 
 export global UiSettings
 {
-    in-out property <bool> dark-mode;
     in-out property <[int]> left-sidebar: [0,1,2,3];
     in-out property <[int]> right-sidebar: [4,5,6,7];
 
-    changed dark-mode => {
-        // TODO: This doesn't work
-        debug("Dark mode changed to ");
-        Palette.color-scheme = dark-mode ? ColorScheme.dark : ColorScheme.light;
+    public function set_dark_theme() {
+        Palette.color-scheme = ColorScheme.dark;
+    }
+
+    public function set_light_theme() {
+        Palette.color-scheme = ColorScheme.light;
     }
 
     out property <[image]> id-to-image: [Icons.print, Icons.temperature, Icons.move, Icons.emergency_stop, Icons.fan, Icons.quick_action, Icons.console, Icons.settings];

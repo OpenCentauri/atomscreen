@@ -11,6 +11,6 @@ extruder = [ 200, 240, 280 ]
 heater_bed = [ 60, 70 ]
 
 [ui]
-dark_mode = false
+dark_mode = true
 left_sidebar = ["files", "temperature", "move", "emergency_stop"]
 right_sidebar = ["fan", "macros", "console", "settings"]

@@ -28,7 +28,12 @@ pub fn register_set_ui_settings(ui : &AppWindow, configuration : &OptionalUiConf
     let left_sidebar: Vec<i32> = configuration.left_sidebar.iter().map(|f| name_to_id(f)).collect();
     let right_sidebar: Vec<i32> = configuration.right_sidebar.iter().map(|f| name_to_id(f)).collect();
 
-    ui.global::<UiSettings>().set_dark_mode(configuration.dark_mode);
+    if configuration.dark_mode {
+        ui.global::<UiSettings>().invoke_set_dark_theme();
+    } else {
+        ui.global::<UiSettings>().invoke_set_light_theme();
+    }
+    
     ui.global::<UiSettings>().set_left_sidebar(ModelRc::new(VecModel::from(left_sidebar)));
     ui.global::<UiSettings>().set_right_sidebar(ModelRc::new(VecModel::from(right_sidebar)));
-}
+} 
