@@ -104,6 +104,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let ui_settings = &config.ui.unwrap_or(OptionalUiConfig::default());
     register_set_ui_settings(&ui, &ui_settings);
 
+    register_execute_quick_action(&ui, &config.quick_actions, &moonraker_connection);
+
     tokio::task::block_in_place(|| {
         ui.run().unwrap();
     });

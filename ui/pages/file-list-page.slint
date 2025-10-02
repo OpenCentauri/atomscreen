@@ -22,28 +22,25 @@ export component FileListPage inherits Page
 
     if !Filesystem.loading && selected_file.path == "": ScrollView {
         VerticalLayout {
-            for f in Filesystem.files: VerticalLayout {
+            for f in Filesystem.files: Rectangle {
                 height: 40px;
                 width: 100%;
-                Rectangle {
-                    TouchArea {
-                        clicked => { root.selected_file = f; }
-                    }
-                    HorizontalLayout {
-                        spacing: 10px;
-                        padding: 5px;
-                        Image {
-                            source: Utils.image_exists(f.thumbnail) ? f.thumbnail : Icons.file;
-                            colorize: Utils.image_exists(f.thumbnail) ? transparent : Palette.foreground;
-                            vertical-alignment: center;
-                            horizontal-alignment: center;
-                            width: 32px;
-                        }
-                        Text { text: f.path; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
-                        Text { text: Utils.format_bytes(f.size); horizontal-alignment: right; vertical-alignment: center; }
-                    }
+                TouchArea {
+                    clicked => { root.selected_file = f; }
                 }
-                Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
+                HorizontalLayout {
+                    spacing: 10px;
+                    padding: 5px;
+                    Image {
+                        source: Utils.image_exists(f.thumbnail) ? f.thumbnail : Icons.file;
+                        colorize: Utils.image_exists(f.thumbnail) ? transparent : Palette.foreground;
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                        width: 32px;
+                    }
+                    Text { text: f.path; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
+                    Text { text: Utils.format_bytes(f.size); horizontal-alignment: right; vertical-alignment: center; }
+                }
             }
         }
     }

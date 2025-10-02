@@ -1,0 +1,50 @@
+import { Page } from "../components/page.slint";
+import { ScrollView } from "std-widgets.slint";
+import { QuickActions } from "../state.slint";
+import { Icons } from "../constants.slint";
+import { Palette, StyleMetrics } from "std-widgets.slint";
+import { SmallButton } from "../components/small-button.slint";
+import { GhostButton } from "../components/ghost-button.slint";
+
+component QuickAction inherits Rectangle
+{
+    in property <string> quick-action;
+    height: 30px;
+    width: 100%;
+
+    HorizontalLayout {
+        spacing: StyleMetrics.layout-spacing;
+        Image {
+            source: Icons.action;
+            colorize: Palette.foreground;
+            width: 32px;
+        }
+
+        Text { text: quick-action; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
+
+        GhostButton {
+            text: "Run";
+            width: 50px;
+        }
+    }
+}
+
+export component QuickActionsPage inherits Page 
+{
+    header: "Quick Actions";
+
+    ScrollView {
+        VerticalLayout {
+            spacing: StyleMetrics.layout-spacing * 1.5;
+            for quick-action in QuickActions.quick-actions: QuickAction { quick-action: quick-action; }
+        }
+    }
+
+    if QuickActions.quick-actions.length <= 0: Rectangle {
+        Text {
+            text: "No quick actions found!\n\nPlease refer to the configuration reference\nto set this up!";
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+}

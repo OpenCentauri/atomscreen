@@ -14,3 +14,8 @@ heater_bed = [ 60, 70 ]
 dark_mode = true
 left_sidebar = ["files", "temperature", "move", "emergency_stop"]
 right_sidebar = ["fan", "macros", "console", "settings"]
+
+[quick_actions]
+Restart = ["RESTART"]
+"Firmware Restart" = ["FIRMWARE_RESTART"]
+Home = ["G28"]

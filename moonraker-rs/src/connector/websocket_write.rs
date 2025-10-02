@@ -92,7 +92,7 @@ impl MoonrakerConnectionWriteLoop {
         &mut self,
         frame: &Mutex<Option<Frame<'static>>>,
     ) -> Result<(), Error> {
-        println!("Got raw frame to send");
+        //println!("Got raw frame to send");
 
         if let Some(frame) = frame.lock().await.take() {
             self.websocket_writer.write_frame(frame).await?;

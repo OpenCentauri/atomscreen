@@ -20,8 +20,9 @@ export component InteractableTemperatureElement {
     callback on_manual_entry(internal-name: string, friendly-name: string);
 
     VerticalLayout {
-        spacing: 10px;
-        padding-top: 10px;
+        spacing: StyleMetrics.layout-spacing / 2;
+        padding-top: StyleMetrics.layout-spacing / 2;
+        padding-bottom: StyleMetrics.layout-spacing / 2;
         HorizontalLayout {
             height: 30px;
             spacing: 10px;
@@ -96,8 +97,6 @@ export component InteractableTemperatureElement {
         }
 
         @children
-
-        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; }
     }
 }
 
@@ -105,12 +104,15 @@ component ReadOnlyTemperatureElement
 {
     in property <TemperatureSensor> temperature_sensor;
 
+
     VerticalLayout {
-        spacing: 10px;
-        padding-top: 10px;
+        padding-top: StyleMetrics.layout-spacing / 2;
+        padding-bottom: StyleMetrics.layout-spacing / 2;
+        
         HorizontalLayout {
             height: 30px;
-            spacing: 10px;
+            spacing: StyleMetrics.layout-spacing / 2;
+            alignment: stretch;
 
             Image {
                 colorize: Palette.foreground;
@@ -130,7 +132,6 @@ component ReadOnlyTemperatureElement
                 font-weight: 900;
             }
         }
-        Rectangle { height: 1px; background: Palette.border; horizontal-stretch: 1; width: 100%; }
     }
 }
 
@@ -202,56 +203,6 @@ export component TemperaturePage inherits Page {
                     text: "Filament options";
                     clicked => { is_filament_menu_open = true; }
                 }
-
-                // TODO: Split off into component
-                // TODO: Find a better way to do those checks
-                /*
-                HorizontalLayout {
-                    
-                    if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: SmallButton {
-                        height: 30px;
-                        border-radius: 0;
-                        background: selection == 0 ? Palette.control-background : transparent;
-                        text: "Extrude/Retract";
-                        clicked => { selection = 0; }
-                    }
-                    if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: SmallButton {
-                        height: 30px;
-                        border-radius: 0;
-                        background: selection == 1 ? Palette.control-background : transparent;
-                        text: "Load/Unload";
-                        clicked => { selection = 1; }
-                    }
-                }
-
-                if selection == 0: HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    if GcodeCommands.extruder_retract_available: SmallButton {
-                        icon: Icons.eject;
-                        text: "Retract";
-                        clicked => { GcodeCommands.extruder_retract(); }
-                    }
-                    if GcodeCommands.extruder_extrude_available:SmallButton {
-                        icon: Icons.arrow-down;
-                        text: "Extrude";
-                        clicked => { GcodeCommands.extruder_extrude(); }
-                    }
-                }
-
-                if selection == 1: HorizontalLayout {
-                    height: 30px;
-                    spacing: 10px;
-                    if GcodeCommands.extruder_unload_filament_available: SmallButton {
-                        text: "Unload filament";
-                        clicked => { GcodeCommands.extruder_unload_filament(); }
-                    }
-                    if GcodeCommands.extruder_load_filament_available: SmallButton {
-                        text: "Load filament";
-                        clicked => { GcodeCommands.extruder_load_filament(); }
-                    }
-                }
-                */
             }
 
             if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); }}

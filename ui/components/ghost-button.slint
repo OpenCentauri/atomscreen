@@ -5,9 +5,16 @@ export component GhostButton inherits VerticalLayout {
     in property <color> text-color: Palette.foreground;
     callback clicked;
 
-    Rectangle {
+    states [
+        pressed when touch-area.pressed : {
+            container.background: Palette.selection-background;
+        }
+    ]
+
+    container := Rectangle {
         height: t.height * 2;
         min-width: t.width * 1.5;
+        border-radius: 10px;
         //background: red;
 
         t := Text {
@@ -16,7 +23,7 @@ export component GhostButton inherits VerticalLayout {
             font-weight: 600;
         }
 
-        TouchArea {
+        touch-area := TouchArea {
             clicked => { root.clicked(); }
         }
     }

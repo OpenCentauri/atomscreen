@@ -13,6 +13,7 @@ import { TopBar } from "components/top-bar.slint";
 import { FileListPage } from "pages/file-list-page.slint";
 import { BottomBarWithStatusMessage } from "components/bottom-bar.slint";
 import { YesNoPrompt } from "components/yes-no-prompt.slint";
+import { QuickActionsPage } from "pages/quick-actions-page.slint";
 export * from "state.slint";
 
 component ExtruderPage inherits Page {
@@ -128,6 +129,7 @@ component MainView inherits Rectangle
                 if root.current-page == 1: TemperaturePage {}
                 if root.current-page == 0: FileListPage  {}
                 if root.current-page == 6: ExtruderPage {}
+                if root.current-page == 5: QuickActionsPage {}
             }
 
             if UiSettings.right-sidebar.length > 0:VerticalLayout {

@@ -81,3 +81,9 @@ export global UiSettings
 
     out property <[image]> id-to-image: [Icons.print, Icons.temperature, Icons.move, Icons.emergency_stop, Icons.fan, Icons.quick_action, Icons.console, Icons.settings];
 }
+
+export global QuickActions
+{
+    in-out property <[string]> quick-actions: ["Action One", "Action Two"];
+    callback execute_quick_action(action: string);
+}
