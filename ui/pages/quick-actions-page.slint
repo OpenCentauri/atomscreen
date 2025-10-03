@@ -13,6 +13,7 @@ component QuickAction inherits Rectangle
     width: 100%;
 
     HorizontalLayout {
+        padding-right: StyleMetrics.layout-padding / 2;
         spacing: StyleMetrics.layout-spacing;
         Image {
             source: Icons.action;
@@ -22,9 +23,12 @@ component QuickAction inherits Rectangle
 
         Text { text: quick-action; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
 
-        GhostButton {
+        SmallButton {
             text: "Run";
             width: 50px;
+            vertical-stretch: 1;
+            border-radius: 10px;
+            clicked => { QuickActions.execute_quick_action(quick-action); }
         }
     }
 }
@@ -38,6 +42,8 @@ export component QuickActionsPage inherits Page
         VerticalLayout {
             alignment: start;
             spacing: StyleMetrics.layout-spacing * 1.5;
+            padding-top: StyleMetrics.layout-padding / 2;
+
             for quick-action in QuickActions.quick-actions: QuickAction { quick-action: quick-action; }
         }
     }
