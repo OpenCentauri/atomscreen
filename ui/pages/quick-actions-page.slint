@@ -36,6 +36,7 @@ export component QuickActionsPage inherits Page
     // TODO: Power devices
     Flickable {
         VerticalLayout {
+            alignment: start;
             spacing: StyleMetrics.layout-spacing * 1.5;
             for quick-action in QuickActions.quick-actions: QuickAction { quick-action: quick-action; }
         }

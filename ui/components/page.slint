@@ -2,7 +2,8 @@ import { StyleMetrics } from "std-widgets.slint";
 
 export component Page inherits Rectangle {
     in property <string> header;
-
+    width: 100%; 
+    height: 100%;
     GridLayout {
         padding: StyleMetrics.layout-padding / 2;
         Rectangle {

@@ -194,6 +194,7 @@ export component TemperaturePage inherits Page {
 
     Flickable {
         VerticalLayout {
+            alignment: start;
             InteractableTemperatureElement { 
                 heater: TemperatureSensors.extruder; 
                 on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
