@@ -16,79 +16,11 @@ import { YesNoPrompt } from "components/yes-no-prompt.slint";
 import { QuickActionsPage } from "pages/quick-actions-page.slint";
 export * from "state.slint";
 
-component ExtruderPage inherits Page {
-    header: "Extruder";
-
-    HorizontalLayout {
-        spacing: StyleMetrics.layout-padding;
-        visible: !t.is_keyboard_open;
-
-
-        VerticalLayout {
-            InteractableTemperatureElement { heater: TemperatureSensors.extruder; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
-            Rectangle {}
-            HorizontalLayout {
-                height: 30px;
-                spacing: StyleMetrics.layout-padding / 2;
-                SmallButton {
-                    text: "Load Filament";
-                }
-                SmallButton {
-                    text: "Unload Filament";
-                }
-            }
-        }
-        
-        VerticalLayout {
-            width: 50px;
-            spacing: 10px;
-            padding-bottom: StyleMetrics.layout-padding / 2;
-
-            // Unload
-            
-            GridLayout {
-                padding-left: StyleMetrics.layout-padding / 2;
-                padding-right: StyleMetrics.layout-padding / 2;
-                IconButton {
-                    icon: @image-url("assets/eject.svg");
-                    checked: true;
-                    border-radius: StyleMetrics.layout-padding;
-                }
-            }
-
-            Text {
-                text: "Extrude";
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                rotation-angle: 90deg;
-            }
-
-            GridLayout {
-                padding-left: StyleMetrics.layout-padding / 2;
-                padding-right: StyleMetrics.layout-padding / 2;
-                IconButton {
-                    icon: @image-url("assets/arrow-down.svg");
-                    checked: true;
-                    border-radius: StyleMetrics.layout-padding;
-                }
-            }
-        }
-
-
-    }
-
-    t := TemperatureEntry {
-
-    }
-}
-
 component MainView inherits Rectangle
 {
     in-out property <int> current-page: 0;
     property <bool> is_emergency_prompt_open: false;
     background: Palette.alternate-background;
-
-
 
     VerticalLayout { 
         TopBar {
@@ -128,7 +60,6 @@ component MainView inherits Rectangle
                 
                 if root.current-page == 1: TemperaturePage {}
                 if root.current-page == 0: FileListPage  {}
-                if root.current-page == 6: ExtruderPage {}
                 if root.current-page == 5: QuickActionsPage {}
             }
 
