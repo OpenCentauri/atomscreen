@@ -1,38 +1,62 @@
 import { Page } from "../components/page.slint";
 import { ScrollView } from "std-widgets.slint";
-import { QuickActions } from "../state.slint";
+import { QuickActions, PowerDevices } from "../state.slint";
 import { Icons, Constants } from "../constants.slint";
-import { Palette, StyleMetrics } from "std-widgets.slint";
+import { Palette, StyleMetrics, Switch } from "std-widgets.slint";
 import { SmallButton } from "../components/small-button.slint";
 import { VerticalScrollable } from "../components/vertical.slint";
 import { HorizontalStretch } from "../components/horizontal.slint";
+import { PowerDevice } from "../types.slint";
 
-component QuickAction inherits Rectangle
+component PowerDevice inherits HorizontalStretch
+{
+    in property <PowerDevice> power-device;
+
+    Image {
+        source: Icons.power-device;
+        colorize: Palette.foreground;
+    }
+
+    Text { 
+        text: power-device.device; 
+        horizontal-stretch: 1; 
+        vertical-alignment: center; 
+        overflow: elide; 
+    }
+
+    Switch {
+        text: self.checked ? "On" : "Off";
+        vertical-stretch: 1;
+        checked: power-device.status == "On";
+        toggled() => { 
+            PowerDevices.set_power_device_state(power-device.device, self.checked); 
+        }
+    }
+}
+
+component QuickAction inherits HorizontalStretch
 {
     in property <string> quick-action;
-    width: 100%;
 
-    HorizontalStretch {
-        Image {
-            source: Icons.action;
-            colorize: Palette.foreground;
-            width: Constants.thumbnail-size;
-            height: Constants.thumbnail-size;
-        }
+    Image {
+        source: Icons.action;
+        colorize: Palette.foreground;
+    }
 
-        Text { 
-            text: quick-action; 
-            horizontal-stretch: 1; 
-            vertical-alignment: center; 
-            overflow: elide; 
-        }
+    Text { 
+        text: quick-action; 
+        horizontal-stretch: 1; 
+        vertical-alignment: center; 
+        overflow: elide; 
+    }
 
-        SmallButton {
-            text: "Run";
-            width: 50px;
-            vertical-stretch: 1;
-            border-radius: Constants.radius-md;
-            clicked => { QuickActions.execute_quick_action(quick-action); }
+    SmallButton {
+        text: "Run";
+        width: 50px;
+        vertical-stretch: 1;
+        border-radius: Constants.radius-md;
+        clicked => { 
+            QuickActions.execute_quick_action(quick-action); 
         }
     }
 }
@@ -41,11 +65,19 @@ export component QuickActionsPage inherits Page
 {
     header: "Quick Actions";
 
-    // TODO: Power devices
-
+    init => {
+        PowerDevices.fetch_power_devices();
+    }
+    
     VerticalScrollable {
+        for power-device in PowerDevices.power_devices: PowerDevice {
+            power-device: power-device;
+            height: Constants.thumbnail-size;
+        }
+
         for quick-action in QuickActions.quick-actions: QuickAction { 
             quick-action: quick-action; 
+            height: Constants.thumbnail-size;
         }
     }
 
@@ -55,5 +87,26 @@ export component QuickActionsPage inherits Page
             vertical-alignment: center;
             horizontal-alignment: center;
         }
+    }
+}
+
+component LivePreviewTest {
+    width: 480px - 100px;
+    height: 272px - 40px;
+
+    init => {
+        QuickActions.quick-actions = [
+            "Test1",
+            "Test2"
+        ];
+
+        PowerDevices.power_devices = [
+            { device: "Test device", status: "Off", locked_while_printing: false, device_type: "Simulated" },
+            { device: "Test device 2", status: "On", locked_while_printing: false, device_type: "Simulated" }
+        ]
+    }
+
+    QuickActionsPage {
+
     }
 }

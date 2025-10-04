@@ -106,6 +106,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     register_execute_quick_action(&ui, &config.quick_actions, &moonraker_connection);
 
+    register_misc_set_power_device(&ui, &moonraker_connection);
+    register_misc_fetch_power_devices(&ui, &moonraker_connection);
+
     tokio::task::block_in_place(|| {
         ui.run().unwrap();
     });

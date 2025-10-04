@@ -11,6 +11,8 @@ pub mod util_create_temperature_list;
 pub mod settings_set_ui_settings;
 pub mod quick_action_execute;
 pub mod util_time_in_seconds_to_string;
+pub mod misc_set_power_device;
+pub mod misc_fetch_power_devices;
 
 pub use util_format_bytes::*;
 pub use filesystem_fetch_metadata::*;
@@ -25,3 +27,5 @@ pub use util_create_temperature_list::*;
 pub use settings_set_ui_settings::*;
 pub use quick_action_execute::*;
 pub use util_time_in_seconds_to_string::*;
+pub use misc_set_power_device::*;
+pub use misc_fetch_power_devices::*;

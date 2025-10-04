@@ -1,4 +1,4 @@
-import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile } from "types.slint";
+import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile, PowerDevice } from "types.slint";
 import { Palette } from "std-widgets.slint";
 import { Icons } from "constants.slint";
 
@@ -96,4 +96,11 @@ export global ActiveUi
 {
     in-out property <length> width: 480px;
     in-out property <length> height: 272px;
+}
+
+export global PowerDevices
+{
+    in-out property <[PowerDevice]> power_devices: [];
+    callback set_power_device_state(device : string, state: bool);
+    callback fetch_power_devices();
 }

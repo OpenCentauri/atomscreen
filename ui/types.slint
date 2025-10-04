@@ -32,3 +32,11 @@ export struct MoonrakerFile
     layer_height_mm: float,
     nozzle_diameter_mm: float,
 }
+
+export struct PowerDevice
+{
+    device: string,
+    status: string,
+    locked_while_printing: bool,
+    device_type: string,
+}
