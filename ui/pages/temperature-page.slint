@@ -10,7 +10,7 @@ import { VerticalStart, VerticalScrollable, VerticalStretch, VerticalCenter } fr
 import { HorizontalStretch } from "../components/horizontal.slint";
 import { Dropdown } from "../components/dropdown-select.slint";
 
-export component InteractableTemperatureElement {
+export component InteractableTemperatureElement inherits VerticalStart {
     in property <Heater> heater;
     property <int> target: heater.target;
     property <string> friendly-name: Utils.prettify_name(heater.name);
@@ -22,73 +22,67 @@ export component InteractableTemperatureElement {
 
     callback on_manual_entry(internal-name: string, friendly-name: string);
 
-    VerticalStart {
-        HorizontalStretch {
-            Image {
-                colorize: Palette.foreground;
-                width: Constants.thumbnail-size;
-                height: Constants.thumbnail-size;
-                source: heater.name == "extruder"
-                    ? Icons.extruder
-                    : heater.name == "heater_bed"
-                        ? Icons.bed
-                        : Icons.fan;
-            }
+    HorizontalStretch {
+        height: Constants.list-entry-height;
+        Image {
+            colorize: Palette.foreground;
+            source: heater.name == "extruder"
+                ? Icons.extruder
+                : heater.name == "heater_bed"
+                    ? Icons.bed
+                    : Icons.fan;
+        }
 
-            VerticalCenter {
-                spacing: 2px;
+        VerticalCenter {
+            spacing: 2px;
+            horizontal-stretch: 1;
+            Text {
+                text: friendly-name;
                 horizontal-stretch: 1;
-                Text {
-                    text: friendly-name;
-                    horizontal-stretch: 1;
-                    vertical-alignment: center;
-                    overflow: elide;
-                }
-
-                if extra-text != "": Text {
-                    text: extra-text;
-                    horizontal-stretch: 1;
-                    vertical-alignment: center;
-                    overflow: elide;
-                    font-size: Constants.font-size-sm;
-                }
+                vertical-alignment: center;
+                overflow: elide;
             }
 
-            Dropdown {
-                options: Utils.create_temperature_lists(heater.presets);
-                border-color: Palette.selection-background;
-                text: target > 0
-                    ? heater.temperature + "°C -> " + target + "°C"
-                    : heater.temperature + "°C";
-                selected(option, index) => {
-                    if option == "Off" {
-                        TemperatureSensors.set_new_target_temperature(heater.name, 0);
-                    }
-                    else if option == "Set" {
-                        on_manual_entry(heater.name, friendly-name);
-                    }
-                    else {
-                        TemperatureSensors.set_new_target_temperature(heater.name, heater.presets[index - 1]);
-                    }
-                }
+            if extra-text != "": Text {
+                text: extra-text;
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                overflow: elide;
+                font-size: Constants.font-size-sm;
             }
         }
 
-        @children
+        Dropdown {
+            options: Utils.create_temperature_lists(heater.presets);
+            border-color: Palette.selection-background;
+            text: target > 0
+                ? heater.temperature + "°C -> " + target + "°C"
+                : heater.temperature + "°C";
+            selected(option, index) => {
+                if option == "Off" {
+                    TemperatureSensors.set_new_target_temperature(heater.name, 0);
+                }
+                else if option == "Set" {
+                    on_manual_entry(heater.name, friendly-name);
+                }
+                else {
+                    TemperatureSensors.set_new_target_temperature(heater.name, heater.presets[index - 1]);
+                }
+            }
+        }
     }
+
+    @children
 }
 
-component ReadOnlyTemperatureElement inherits HorizontalStretch
-{
+component ReadOnlyTemperatureElement inherits HorizontalStretch { 
     in property <TemperatureSensor> temperature_sensor;
-
+    height: Constants.list-entry-height;
     padding-right: Constants.padding-half;
 
     Image {
         colorize: Palette.foreground;
         source: Icons.device-temperature;
-        width: Constants.thumbnail-size;
-        height: Constants.thumbnail-size;
     }
 
     Text {
@@ -118,7 +112,7 @@ export component FilamentMenuDialog inherits Rectangle {
         }
 
         InteractableTemperatureElement { 
-            heater: TemperatureSensors.extruder; 
+            heater: TemperatureSensors.extruder;
             on_manual_entry(internal-name, friendly-name) => { root.on_manual_entry(internal-name, friendly-name); }
         }
 
@@ -163,10 +157,10 @@ export component TemperaturePage inherits Page {
         visible: !t.is_keyboard_open && !is_filament_menu_open;
         
         InteractableTemperatureElement { 
-            heater: TemperatureSensors.extruder; 
+            heater: TemperatureSensors.extruder;
             on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
 
-            SmallButton {
+            btn := SmallButton {
                 height: 30px;
                 text: "Filament options";
                 clicked => { is_filament_menu_open = true; }
@@ -188,7 +182,7 @@ export component TemperaturePage inherits Page {
             } 
         }
 
-        for temp-sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { 
+        for temp-sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement {
             temperature_sensor: temp-sensor;  
         }
     }

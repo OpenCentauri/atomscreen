@@ -23,7 +23,6 @@ export component File inherits Rectangle
             vertical-alignment: center;
             horizontal-alignment: center;
             width: Constants.thumbnail-size;
-            height: Constants.thumbnail-size;
         }
         Text { 
             text: file.path; 
@@ -60,6 +59,7 @@ export component FileListPage inherits Page
     if !Filesystem.loading && selected_file.path == "": VerticalScrollable {
         for f in Filesystem.files: File {
             file: f;
+            height: Constants.list-entry-height;
             on_file_selected => { root.selected_file = f; }
         }
     }

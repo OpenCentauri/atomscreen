@@ -72,12 +72,12 @@ export component QuickActionsPage inherits Page
     VerticalScrollable {
         for power-device in PowerDevices.power_devices: PowerDevice {
             power-device: power-device;
-            height: Constants.thumbnail-size;
+            height: Constants.list-entry-height;
         }
 
         for quick-action in QuickActions.quick-actions: QuickAction { 
             quick-action: quick-action; 
-            height: Constants.thumbnail-size;
+            height: Constants.list-entry-height;
         }
     }
 
