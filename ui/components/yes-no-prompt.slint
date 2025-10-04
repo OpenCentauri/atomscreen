@@ -1,5 +1,8 @@
 import { GhostButton } from "ghost-button.slint";
 import { Palette, StyleMetrics } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
+import { VerticalStretch } from "vertical.slint";
+import { HorizontalEnd } from "horizontal.slint";
 
 export component YesNoPrompt inherits Rectangle 
 {
@@ -8,16 +11,15 @@ export component YesNoPrompt inherits Rectangle
 
     callback yes();
     callback no();
-    border-radius: 20px;
+    border-radius: Constants.radius-xl;
     background: Palette.background;
 
-    VerticalLayout {
-        spacing: 20px;
-        padding: StyleMetrics.layout-padding * 1.5; 
+    VerticalStretch {
+        padding: Constants.padding-extra; 
 
         title_text := Text {
             color: Palette.foreground;
-            font-size: 20px;
+            font-size: Constants.font-size-lg;
             font-weight: 600;
         }
 
@@ -29,13 +31,7 @@ export component YesNoPrompt inherits Rectangle
 
         Rectangle {}
 
-        HorizontalLayout {
-            spacing: 10px;
-
-            Rectangle {
-                horizontal-stretch: 1;
-            }
-            
+        HorizontalEnd {            
             GhostButton {
                 text: "No";
                 width: 60px;

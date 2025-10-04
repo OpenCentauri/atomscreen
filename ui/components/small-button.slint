@@ -1,5 +1,7 @@
 import { Palette, StyleMetrics } from "std-widgets.slint";
 import { Utils } from "../state.slint";
+import { Constants } from "../constants.slint";
+import { HorizontalStart, HorizontalCenter } from "horizontal.slint";
 
 export component SmallButton inherits Rectangle {
     in property <string> text;
@@ -7,7 +9,7 @@ export component SmallButton inherits Rectangle {
     callback clicked();
 
     background: Palette.control-background;
-    border-radius: 20px;
+    border-radius: Constants.radius-lg;
 
     states [
         pressed when touch-area.pressed : {
@@ -16,17 +18,16 @@ export component SmallButton inherits Rectangle {
     ]
 
     GridLayout {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: Constants.padding-half;
+        padding-right: Constants.padding-half;
     
         Rectangle {
             touch-area := TouchArea {
                 clicked => { root.clicked(); }
             }
 
-            HorizontalLayout {
-                spacing: 10px;
-                alignment: center;
+            HorizontalCenter {
+                spacing: Constants.spacing-half;
                 if Utils.image_exists(root.icon) : Image {
                     source: root.icon;
                     colorize: Palette.control-foreground;

@@ -4,7 +4,7 @@ import { Icons } from "constants.slint";
 
 export global TemperatureSensors 
 {
-    in-out property<[TemperatureSensor]> temperature_sensors;
+    in-out property<[TemperatureSensor]> temperature_sensors: [];
     in-out property<[HeaterFan]> heater_fans;
     in-out property<Heater> extruder;
     in-out property<Heater> heated_bed;
@@ -14,7 +14,7 @@ export global TemperatureSensors
 
 export global DisplayStatus 
 {
-    in-out property<string> message;
+    in-out property<string> message: "Slint demo viewer";
     in-out property<float> progress; // 0 -> 1
 }
 
@@ -59,7 +59,10 @@ export global Filesystem
 
 export global Utils
 {
-    pure callback image_exists(image: image) -> bool;  
+    pure public function image_exists(image: image) -> bool {
+        return image.width > 0 && image.height > 0;
+    }
+
     pure callback format_bytes(size: int) -> string;
     pure callback prettify_name(name: string) -> string;
     pure callback create_temperature_lists(presets: [int]) -> [string];

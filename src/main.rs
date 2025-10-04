@@ -85,7 +85,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     register_temperature_set_new_target_temperature(&ui, &moonraker_connection);
 
-    register_util_image_exists(&ui);
     register_util_format_bytes(&ui);
     register_util_prettify_name(&ui);
     register_util_time_in_seconds_to_string(&ui);

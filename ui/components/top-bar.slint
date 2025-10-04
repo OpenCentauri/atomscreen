@@ -1,17 +1,19 @@
 import { Palette, StyleMetrics } from "std-widgets.slint";
-import { Icons } from "../constants.slint";
+import { Icons, Constants } from "../constants.slint";
 import { TemperatureSensors } from "../state.slint";
+import { HorizontalStart, HorizontalStretch } from "horizontal.slint";
 
 export component TopBar inherits Rectangle {
     height: 20px;
     width: 100%;
     background: Palette.alternate-background;
 
-    HorizontalLayout {
+    HorizontalStretch {
         padding-bottom: 2px;
-        padding-left: 10px;
-        padding-right: 10px;
-        spacing: 10px;
+        padding-left: Constants.padding-half;
+        padding-right: Constants.padding-half;
+        spacing: Constants.spacing-half;
+
         Text {
             text: "Printer: Idle";
             color: Palette.alternate-foreground;

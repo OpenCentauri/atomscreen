@@ -14,6 +14,7 @@ import { FileListPage } from "pages/file-list-page.slint";
 import { BottomBarWithStatusMessage } from "components/bottom-bar.slint";
 import { YesNoPrompt } from "components/yes-no-prompt.slint";
 import { QuickActionsPage } from "pages/quick-actions-page.slint";
+import { VerticalStretch, VerticalCenter } from "components/vertical.slint";
 export * from "state.slint";
 
 component MainView inherits Rectangle
@@ -28,9 +29,9 @@ component MainView inherits Rectangle
         }
 
         HorizontalLayout {
-            if UiSettings.left-sidebar.length > 0: VerticalLayout {
-                min-width: 50px;
-                spacing: 5px;
+            if UiSettings.left-sidebar.length > 0: VerticalStretch {
+                width: 50px;
+                spacing: 0;
 
                 for component in UiSettings.left-sidebar: LeftSideIconButton {
                     icon: UiSettings.id-to-image[component];
@@ -63,9 +64,9 @@ component MainView inherits Rectangle
                 if root.current-page == 5: QuickActionsPage {}
             }
 
-            if UiSettings.right-sidebar.length > 0:VerticalLayout {
-                spacing: 5px;
-                min-width: 50px;
+            if UiSettings.right-sidebar.length > 0: VerticalStretch {
+                width: 50px;
+                spacing: 0;
 
                 for component in UiSettings.right-sidebar: RightSideIconButton {
                     icon: UiSettings.id-to-image[component];
@@ -95,12 +96,10 @@ component MainView inherits Rectangle
         background: #00000080;
         TouchArea { }
 
-        VerticalLayout {
+        VerticalCenter {
             width: 60%;
-            alignment: center;
 
             YesNoPrompt {
-                x: (parent.width - self.width) / 2;
                 title: "Emergency Stop";
                 message: "Are you sure you want to perform an emergency stop?";
                 yes() => {

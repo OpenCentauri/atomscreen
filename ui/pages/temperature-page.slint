@@ -5,7 +5,9 @@ import { TemperatureSensor } from "../types.slint";
 import { Page } from "../components/page.slint";
 import { ScrollView, Palette, ComboBox, StyleMetrics, Button, GroupBox, CheckBox } from "std-widgets.slint";
 import { TemperatureEntry } from "../components/number-pad.slint";
-import { Icons } from "../constants.slint";
+import { Icons, Constants } from "../constants.slint";
+import { VerticalStart, VerticalScrollable, VerticalStretch, VerticalCenter } from "../components/vertical.slint";
+import { HorizontalStretch } from "../components/horizontal.slint";
 
 export component InteractableTemperatureElement {
     in property <Heater> heater;
@@ -19,16 +21,12 @@ export component InteractableTemperatureElement {
 
     callback on_manual_entry(internal-name: string, friendly-name: string);
 
-    VerticalLayout {
-        spacing: StyleMetrics.layout-spacing / 2;
-        padding-top: StyleMetrics.layout-spacing / 2;
-        padding-bottom: StyleMetrics.layout-spacing / 2;
-        HorizontalLayout {
-            height: 30px;
-            spacing: 10px;
-
+    VerticalStart {
+        HorizontalStretch {
             Image {
                 colorize: Palette.foreground;
+                width: Constants.thumbnail-size;
+                height: Constants.thumbnail-size;
                 source: heater.name == "extruder"
                     ? Icons.extruder
                     : heater.name == "heater_bed"
@@ -36,8 +34,9 @@ export component InteractableTemperatureElement {
                         : Icons.fan;
             }
 
-            VerticalLayout {
+            VerticalCenter {
                 spacing: 2px;
+                horizontal-stretch: 1;
                 Text {
                     text: friendly-name;
                     horizontal-stretch: 1;
@@ -50,12 +49,12 @@ export component InteractableTemperatureElement {
                     horizontal-stretch: 1;
                     vertical-alignment: center;
                     overflow: elide;
-                    font-size: 10px;
+                    font-size: Constants.font-size-sm;
                 }
             }
 
-
             Rectangle {
+                horizontal-stretch: 0;
                 // TODO: Don't abuse combobox for this.
                 ComboBox {
                     model: Utils.create_temperature_lists(heater.presets);
@@ -78,18 +77,18 @@ export component InteractableTemperatureElement {
                     background: Palette.background;
                     border-color: Palette.accent-background;
                     border-width: 2px;
-                    border-radius: StyleMetrics.layout-padding / 2;
+                    border-radius: Constants.radius-md;
 
                     GridLayout {
-                        padding-left: StyleMetrics.layout-padding;
-                        padding-right: StyleMetrics.layout-padding;
+                        padding-left: Constants.padding;
+                        padding-right: Constants.padding;
                         Text {
                             text: target > 0
                                 ? heater.temperature + "°C -> " + target + "°C"
                                 : heater.temperature + "°C";
                             vertical-alignment: center;
                             horizontal-alignment: right;
-                            font-weight: 900;
+                            font-weight: Constants.font-weight-bold;
                         }
                     }
                 }
@@ -100,38 +99,30 @@ export component InteractableTemperatureElement {
     }
 }
 
-component ReadOnlyTemperatureElement
+component ReadOnlyTemperatureElement inherits HorizontalStretch
 {
     in property <TemperatureSensor> temperature_sensor;
 
+    padding-right: Constants.padding-half;
 
-    VerticalLayout {
-        padding-top: StyleMetrics.layout-spacing / 2;
-        padding-bottom: StyleMetrics.layout-spacing / 2;
-        
-        HorizontalLayout {
-            height: 30px;
-            spacing: StyleMetrics.layout-spacing / 2;
-            alignment: stretch;
+    Image {
+        colorize: Palette.foreground;
+        source: Icons.device-temperature;
+        width: Constants.thumbnail-size;
+        height: Constants.thumbnail-size;
+    }
 
-            Image {
-                colorize: Palette.foreground;
-                source: Icons.device-temperature;
-            }
+    Text {
+        text: Utils.prettify_name(temperature_sensor.name);
+        horizontal-stretch: 1;
+        vertical-alignment: center;
+        overflow: elide;
+    }
 
-            Text {
-                text: Utils.prettify_name(temperature_sensor.name);
-                horizontal-stretch: 1;
-                vertical-alignment: center;
-                overflow: elide;
-            }
-
-            Text {
-                text: temperature_sensor.temperature + "°C";
-                vertical-alignment: center;
-                font-weight: 900;
-            }
-        }
+    Text {
+        text: temperature_sensor.temperature + "°C";
+        vertical-alignment: center;
+        font-weight: Constants.font-weight-bold;
     }
 }
 
@@ -139,9 +130,7 @@ export component FilamentMenuDialog inherits Rectangle {
     callback close();
     callback on_manual_entry(internal-name : string, friendly-name : string); // TODO: Make the temp numpad a popup
 
-    VerticalLayout {
-        spacing: 10px;
-
+    VerticalStretch {
         SmallButton {
             height: 3rem;
             icon: Icons.close;
@@ -155,10 +144,10 @@ export component FilamentMenuDialog inherits Rectangle {
         }
 
     
-        HorizontalLayout {
-            spacing: StyleMetrics.layout-spacing;
-            if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: VerticalLayout {
-                spacing: StyleMetrics.layout-spacing;
+        HorizontalStretch {
+            vertical-stretch: 1;
+
+            if GcodeCommands.extruder_retract_available || GcodeCommands.extruder_extrude_available: VerticalStretch {
                 if GcodeCommands.extruder_retract_available: SmallButton {
                     icon: Icons.eject;
                     text: "Retract";
@@ -171,8 +160,7 @@ export component FilamentMenuDialog inherits Rectangle {
                 }
             }
             
-            if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: VerticalLayout {
-                spacing: StyleMetrics.layout-spacing;
+            if GcodeCommands.extruder_unload_filament_available || GcodeCommands.extruder_load_filament_available: VerticalStretch {
                 if GcodeCommands.extruder_unload_filament_available: SmallButton {
                     text: "Unload filament";
                     clicked => { GcodeCommands.extruder_unload_filament(); }
@@ -192,26 +180,38 @@ export component TemperaturePage inherits Page {
     property <bool> is_filament_menu_open: false;
     property <int> selection : 0;
 
-    Flickable {
-        VerticalLayout {
-            alignment: start;
-            InteractableTemperatureElement { 
-                heater: TemperatureSensors.extruder; 
-                on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
+    VerticalScrollable {
+        visible: !t.is_keyboard_open && !is_filament_menu_open;
+        
+        InteractableTemperatureElement { 
+            heater: TemperatureSensors.extruder; 
+            on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } 
 
-                SmallButton {
-                    height: 30px;
-                    text: "Filament options";
-                    clicked => { is_filament_menu_open = true; }
-                }
+            SmallButton {
+                height: 30px;
+                text: "Filament options";
+                clicked => { is_filament_menu_open = true; }
             }
-
-            if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { heater: TemperatureSensors.heated_bed; on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); }}
-            for temp-fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { heater: temp-fan.heater; extra-text: temp-fan.speed * 100 + "%";   on_manual_entry(internal-name, friendly-name) => { t.open_keyboard(internal-name, friendly-name); } }
-            for temp-sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { temperature_sensor: temp-sensor;  }
         }
 
-        visible: !t.is_keyboard_open && !is_filament_menu_open;
+        if TemperatureSensors.heated_bed.name != "": InteractableTemperatureElement { 
+            heater: TemperatureSensors.heated_bed; 
+            on_manual_entry(internal-name, friendly-name) => { 
+                t.open_keyboard(internal-name, friendly-name); 
+            }
+        }
+
+        for temp-fan in TemperatureSensors.heater_fans: InteractableTemperatureElement { 
+            heater: temp-fan.heater; 
+            extra-text: temp-fan.speed * 100 + "%";   
+            on_manual_entry(internal-name, friendly-name) => { 
+                t.open_keyboard(internal-name, friendly-name); 
+            } 
+        }
+
+        for temp-sensor in TemperatureSensors.temperature_sensors: ReadOnlyTemperatureElement { 
+            temperature_sensor: temp-sensor;  
+        }
     }
 
     if is_filament_menu_open: FilamentMenuDialog {

@@ -1,0 +1,28 @@
+
+import { Palette, StyleMetrics } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
+export component HorizontalStart inherits HorizontalLayout {
+    spacing: Constants.spacing;
+    alignment: LayoutAlignment.start;
+}
+
+export component HorizontalStretch inherits HorizontalStart  {
+    alignment: LayoutAlignment.stretch;
+}
+
+export component HorizontalCenter inherits HorizontalStart  {
+    alignment: LayoutAlignment.center;
+}
+
+export component HorizontalEnd inherits HorizontalStart  {
+    alignment: LayoutAlignment.end;
+}
+
+export component HorizontalScrollable inherits Flickable {
+    in property <length> list-padding <=> layout.padding;
+    in property <length> list-spacing <=> layout.spacing;
+
+    layout := HorizontalStart {
+        @children
+    }
+}

@@ -1,6 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import { StyleMetrics } from "std-widgets.slint";
 export global Icons {
     out property <image> arrow-up: @image-url("assets/arrow-up.svg");
     out property <image> arrow-left: @image-url("assets/arrow-left.svg");
@@ -27,4 +28,26 @@ export global Icons {
     out property <image> settings: @image-url("assets/settings.svg");
     out property <image> temperature: @image-url("assets/temperature.svg");
     out property <image> action: @image-url("assets/action.svg");
+}
+
+export global Constants {
+    out property <int> font-weight-bold: 900;
+    out property <int> font-weight-thin: 300;
+
+    out property <length> font-size-sm: 10px;
+    out property <length> font-size-lg: 20px;
+
+    out property <length> radius-sm: 6px;
+    out property <length> radius-md: 10px;
+    out property <length> radius-lg: 16px;
+    out property <length> radius-xl: 24px;
+
+    out property <length> padding-extra: StyleMetrics.layout-padding * 1.5;
+    out property <length> padding: StyleMetrics.layout-padding;
+    out property <length> padding-half: StyleMetrics.layout-padding / 2;
+
+    out property <length> spacing: StyleMetrics.layout-spacing;
+    out property <length> spacing-half: StyleMetrics.layout-spacing / 2;
+
+    out property <length> thumbnail-size: 32px;
 }

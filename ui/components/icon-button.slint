@@ -1,4 +1,5 @@
 import { Palette, StyleMetrics } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
 
 export component IconButton inherits Rectangle {
     in property <image> icon <=> img.source;
@@ -30,13 +31,13 @@ export component IconButton inherits Rectangle {
 export component RightSideIconButton inherits IconButton {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    border-top-right-radius: StyleMetrics.layout-padding;
-    border-bottom-right-radius: StyleMetrics.layout-padding;
+    border-top-right-radius: Constants.radius-lg;
+    border-bottom-right-radius: Constants.radius-lg;
 }
 
 export component LeftSideIconButton inherits IconButton {
-    border-top-left-radius: StyleMetrics.layout-padding;
-    border-bottom-left-radius: StyleMetrics.layout-padding;
+    border-top-left-radius: Constants.radius-lg;
+    border-bottom-left-radius: Constants.radius-lg;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }

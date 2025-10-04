@@ -1,0 +1,25 @@
+import { StyleMetrics } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
+
+export component VerticalStart inherits VerticalLayout {
+    spacing: Constants.spacing;
+    alignment: LayoutAlignment.start;
+}
+
+export component VerticalStretch inherits VerticalStart  {
+    alignment: LayoutAlignment.stretch;
+}
+
+export component VerticalCenter inherits VerticalStart  {
+    alignment: LayoutAlignment.center;
+    
+}
+
+export component VerticalScrollable inherits Flickable {
+    in property <length> list-padding <=> layout.padding;
+    in property <length> list-spacing <=> layout.spacing;
+
+    layout := VerticalStart {
+        @children
+    }
+}

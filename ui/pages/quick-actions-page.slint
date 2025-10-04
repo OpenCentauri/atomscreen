@@ -1,33 +1,37 @@
 import { Page } from "../components/page.slint";
 import { ScrollView } from "std-widgets.slint";
 import { QuickActions } from "../state.slint";
-import { Icons } from "../constants.slint";
+import { Icons, Constants } from "../constants.slint";
 import { Palette, StyleMetrics } from "std-widgets.slint";
 import { SmallButton } from "../components/small-button.slint";
-import { GhostButton } from "../components/ghost-button.slint";
+import { VerticalScrollable } from "../components/vertical.slint";
+import { HorizontalStretch } from "../components/horizontal.slint";
 
 component QuickAction inherits Rectangle
 {
     in property <string> quick-action;
-    height: 30px;
     width: 100%;
 
-    HorizontalLayout {
-        padding-right: StyleMetrics.layout-padding / 2;
-        spacing: StyleMetrics.layout-spacing;
+    HorizontalStretch {
         Image {
             source: Icons.action;
             colorize: Palette.foreground;
-            width: 32px;
+            width: Constants.thumbnail-size;
+            height: Constants.thumbnail-size;
         }
 
-        Text { text: quick-action; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
+        Text { 
+            text: quick-action; 
+            horizontal-stretch: 1; 
+            vertical-alignment: center; 
+            overflow: elide; 
+        }
 
         SmallButton {
             text: "Run";
             width: 50px;
             vertical-stretch: 1;
-            border-radius: 10px;
+            border-radius: Constants.radius-md;
             clicked => { QuickActions.execute_quick_action(quick-action); }
         }
     }
@@ -38,13 +42,10 @@ export component QuickActionsPage inherits Page
     header: "Quick Actions";
 
     // TODO: Power devices
-    Flickable {
-        VerticalLayout {
-            alignment: start;
-            spacing: StyleMetrics.layout-spacing * 1.5;
-            padding-top: StyleMetrics.layout-padding / 2;
 
-            for quick-action in QuickActions.quick-actions: QuickAction { quick-action: quick-action; }
+    VerticalScrollable {
+        for quick-action in QuickActions.quick-actions: QuickAction { 
+            quick-action: quick-action; 
         }
     }
 
