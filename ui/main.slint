@@ -1,7 +1,7 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider, ComboBox, TabWidget } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks, UiSettings } from "state.slint";
+import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks, UiSettings, ActiveUi } from "state.slint";
 import { Heater, TemperatureSensor, MoonrakerFile } from "types.slint";
 import { Icons } from "constants.slint";
 import { Page } from "components/page.slint";
@@ -116,6 +116,14 @@ component MainView inherits Rectangle
 
 export component AppWindow inherits Window {
     default-font-family: "Adwaita Sans";
+
+    changed width => {
+        ActiveUi.width = self.width;
+    }
+
+    changed height => {
+        ActiveUi.height = self.height;
+    }
 
     if Webhooks.moonraker_connected && Webhooks.klipper_state == "Ready" : MainView {
         width: 100%;

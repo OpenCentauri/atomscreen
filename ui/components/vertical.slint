@@ -1,4 +1,4 @@
-import { StyleMetrics } from "std-widgets.slint";
+import { StyleMetrics, ScrollView } from "std-widgets.slint";
 import { Constants } from "../constants.slint";
 
 export component VerticalStart inherits VerticalLayout {
@@ -16,6 +16,15 @@ export component VerticalCenter inherits VerticalStart  {
 }
 
 export component VerticalScrollable inherits Flickable {
+    in property <length> list-padding <=> layout.padding;
+    in property <length> list-spacing <=> layout.spacing;
+
+    layout := VerticalStart {
+        @children
+    }
+}
+
+export component VerticalScrollbar inherits ScrollView {
     in property <length> list-padding <=> layout.padding;
     in property <length> list-spacing <=> layout.spacing;
 

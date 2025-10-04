@@ -8,6 +8,7 @@ import { TemperatureEntry } from "../components/number-pad.slint";
 import { Icons, Constants } from "../constants.slint";
 import { VerticalStart, VerticalScrollable, VerticalStretch, VerticalCenter } from "../components/vertical.slint";
 import { HorizontalStretch } from "../components/horizontal.slint";
+import { Dropdown } from "../components/dropdown-select.slint";
 
 export component InteractableTemperatureElement {
     in property <Heater> heater;
@@ -53,43 +54,21 @@ export component InteractableTemperatureElement {
                 }
             }
 
-            Rectangle {
-                horizontal-stretch: 0;
-                // TODO: Don't abuse combobox for this.
-                ComboBox {
-                    model: Utils.create_temperature_lists(heater.presets);
-                    width: 90%;
-
-                    selected(value) => {
-                        if value == "Off" {
-                            TemperatureSensors.set_new_target_temperature(heater.name, 0);
-                        }
-                        else if value == "Set" {
-                            on_manual_entry(heater.name, friendly-name);
-                        }
-                        else {
-                            TemperatureSensors.set_new_target_temperature(heater.name, Utils.convert_temperature_back(value));
-                        }
+            Dropdown {
+                options: Utils.create_temperature_lists(heater.presets);
+                border-color: Palette.selection-background;
+                text: target > 0
+                    ? heater.temperature + "°C -> " + target + "°C"
+                    : heater.temperature + "°C";
+                selected(option, index) => {
+                    if option == "Off" {
+                        TemperatureSensors.set_new_target_temperature(heater.name, 0);
                     }
-                }
-
-                Rectangle {
-                    background: Palette.background;
-                    border-color: Palette.accent-background;
-                    border-width: 2px;
-                    border-radius: Constants.radius-md;
-
-                    GridLayout {
-                        padding-left: Constants.padding;
-                        padding-right: Constants.padding;
-                        Text {
-                            text: target > 0
-                                ? heater.temperature + "°C -> " + target + "°C"
-                                : heater.temperature + "°C";
-                            vertical-alignment: center;
-                            horizontal-alignment: right;
-                            font-weight: Constants.font-weight-bold;
-                        }
+                    else if option == "Set" {
+                        on_manual_entry(heater.name, friendly-name);
+                    }
+                    else {
+                        TemperatureSensors.set_new_target_temperature(heater.name, heater.presets[index - 1]);
                     }
                 }
             }

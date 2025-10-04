@@ -1,0 +1,112 @@
+import { Palette, ComboBox } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
+import { VerticalScrollable, VerticalStart, VerticalScrollbar, VerticalStretch } from "vertical.slint";
+import { HorizontalStart } from "horizontal.slint";
+import { ActiveUi } from "../state.slint";
+
+export component Dropdown inherits Rectangle {
+    in property <string> text;
+    in property <[string]> options;
+    in property <length> element-length: 50px;
+    out property <bool> is-open: false;
+
+    callback selected(option: string, index : int);
+
+    border-color: Palette.accent-background;
+    border-width: 2px;
+    border-radius: Constants.radius-md;
+
+    GridLayout {
+        padding-left: Constants.padding;
+        padding-right: Constants.padding;
+        Text {
+            text: text;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+            font-weight: Constants.font-weight-bold;
+        }
+    }
+
+    TouchArea {
+        clicked => { 
+            popup.show(); 
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height;
+        width: max(root.width, 100px);
+        height: min(options.length * element-length, ActiveUi.height);
+
+        Rectangle {
+            background: Palette.alternate-background;
+            drop-shadow-color: #0000004C;
+            drop-shadow-blur: 2px;
+            drop-shadow-offset-y: 1px;
+            border-radius: Constants.radius-md;
+            border-color: Palette.accent-background;
+            border-width: 1px;
+        }
+
+        FocusScope {
+            changed has-focus => {
+                if !self.has-focus {
+                    popup.close();
+                }
+            }
+
+            VerticalStretch {
+                padding: 0;
+                spacing: 0;
+                for i in options.length: Rectangle {
+                    bg := Rectangle {
+                        HorizontalStart {
+                            padding-left: Constants.padding;
+                            padding-right: Constants.padding;
+                            Text {
+                                text: options[i];
+                                color: Palette.alternate-foreground;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        states [
+                            pressed when touch-area.pressed : {
+                                bg.background: Palette.selection-background;
+                            }
+                        ]
+
+                        touch-area := TouchArea {
+                            clicked => {
+                                selected(options[i], i);
+                                popup.close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// For testing in the slint live preview
+component LivePreviewTest {
+    width: 480px;
+    height: 272px;
+
+    VerticalStart {
+        Dropdown {
+            text: "Test Test Test";
+            options: ["One", "Two", "Three"];
+        }
+        Dropdown {
+            text: "Long";
+            options: ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+        }
+
+        ComboBox {
+            model: ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+        }
+    }
+}

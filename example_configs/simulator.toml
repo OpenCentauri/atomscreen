@@ -7,7 +7,7 @@ host = "localhost"
 port = 7125
 
 [heater_presets]
-extruder = [ 200, 240, 280 ]
+extruder = [ 200, 240, 280, 290, 300, 310 ]
 heater_bed = [ 60, 70 ]
 
 [ui]
