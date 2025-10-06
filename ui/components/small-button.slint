@@ -32,9 +32,10 @@ export component SmallButton inherits Rectangle {
                     source: root.icon;
                     colorize: Palette.control-foreground;
                     vertical-alignment: center;
+                    width: 24px;
                 }
 
-                Text {
+                if root.text != "": Text {
                     text: root.text;
                     color: Palette.control-foreground;
                     vertical-alignment: center;

@@ -1,0 +1,34 @@
+import { Palette } from "std-widgets.slint";
+import { Constants } from "../constants.slint";
+import { HorizontalStart } from "horizontal.slint";
+import { Utils } from "../state.slint";
+
+export component Badge inherits Rectangle {
+    in property <string> text;
+    in property <image> icon;
+    in property <length> spacing: Constants.spacing-half / 2;
+    in property <color> foreground: Palette.accent-foreground;
+    height: 16px + Constants.padding;
+
+    background: Palette.accent-background;
+    border-radius: Constants.radius-md;
+
+    hs := HorizontalStart {
+        spacing: spacing;
+        padding-left: Constants.padding-half;
+        padding-right: Constants.padding-half;
+        padding-top: Constants.padding-quarter;
+        padding-bottom: Constants.padding-quarter;
+
+        if Utils.image_exists(icon): Image {
+            source: icon;
+            colorize: foreground;
+        }
+
+        ta := Text {
+            text: text;
+            vertical-alignment: center;
+            color: foreground;
+        }
+    }
+}

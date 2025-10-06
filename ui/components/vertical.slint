@@ -15,6 +15,10 @@ export component VerticalCenter inherits VerticalStart  {
     
 }
 
+export component VerticalEnd inherits VerticalStart {
+    alignment: LayoutAlignment.end;
+}
+
 export component VerticalScrollable inherits Flickable {
     in property <length> list-padding <=> layout.padding;
     in property <length> list-spacing <=> layout.spacing;

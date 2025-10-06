@@ -49,6 +49,8 @@ export global Filesystem
 {
     callback list_files();
     callback fetch_metadata(index : int);
+    callback load_high_res_thumbnail(file_path : string);
+    in-out property <image> high_res_thumbnail;
     in-out property <[MoonrakerFile]> files: [{
         path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",
     }, {

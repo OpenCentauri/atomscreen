@@ -82,6 +82,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     register_filesystem_list_files(&ui, &moonraker_connection);
     register_filesystem_fetch_metadata(&ui, &moonraker_connection);
+    register_filesystem_load_high_res_thumbnail(&ui, &moonraker_connection);
 
     register_temperature_set_new_target_temperature(&ui, &moonraker_connection);
 

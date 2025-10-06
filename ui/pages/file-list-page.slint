@@ -3,8 +3,10 @@ import { Filesystem, Utils } from "../state.slint";
 import { ProgressIndicator, ScrollView, Button, Palette } from "std-widgets.slint";
 import { Page } from "../components/page.slint";
 import { Icons, Constants } from "../constants.slint";
-import { VerticalScrollable, VerticalStretch } from "../components/vertical.slint";
-import { HorizontalStretch } from "../components/horizontal.slint";
+import { VerticalScrollable, VerticalStretch, VerticalStart, VerticalEnd, VerticalCenter } from "../components/vertical.slint";
+import { HorizontalStretch, HorizontalStart, HorizontalCenter, HorizontalEnd } from "../components/horizontal.slint";
+import { SmallButton } from "../components/small-button.slint";
+import { Badge } from "../components/badge.slint";
 
 export component File inherits Rectangle 
 {
@@ -40,6 +42,116 @@ export component File inherits Rectangle
     }
 }
 
+export component FilePreview inherits Rectangle
+{
+    in property <MoonrakerFile> file;
+    property <image> empty_image;
+    callback close();
+    callback print();
+
+    init => {
+        Filesystem.load_high_res_thumbnail(file.path);
+    }
+
+    VerticalStretch {
+        HorizontalStretch {
+            height: 3rem;
+            SmallButton {
+                horizontal-stretch: 1;
+                icon: Icons.close;
+                clicked => { 
+                    Filesystem.high_res_thumbnail = empty_image; 
+                    root.close(); 
+                }
+            }
+            Text {
+                // TODO: Strip folders
+                horizontal-stretch: 1;
+                text: file.path;
+                wrap: TextWrap.no-wrap;
+                overflow: elide;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            SmallButton {
+                icon: Icons.print;
+                horizontal-stretch: 1;
+                text: file.estimated-time-s > 0  
+                    ? "Print (" + Utils.time_in_seconds_to_string(file.estimated-time-s) + ")"
+                    : "Print";
+                clicked => { 
+                    Filesystem.high_res_thumbnail = empty_image; 
+                    root.print(); 
+                }
+            }
+        }
+
+        Rectangle {
+            HorizontalStretch {
+                rect := Rectangle {
+                    horizontal-stretch: 1;
+                    if Utils.image_exists(Filesystem.high_res_thumbnail) || Utils.image_exists(file.thumbnail): Image {
+                        source: Utils.image_exists(Filesystem.high_res_thumbnail) ? Filesystem.high_res_thumbnail : file.thumbnail;
+                        image-fit: ImageFit.cover;
+                        width: min(rect.width, rect.height);
+                        height: min(rect.width, rect.height);
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                Rectangle {
+                    background: Palette.alternate-background;
+                    border-radius: Constants.radius-md;
+                    VerticalStart {
+                        alignment: LayoutAlignment.space-between;
+                        spacing: 0;
+                        padding: Constants.padding-half;
+
+                        if file.filament_type != "": HorizontalEnd {
+                            Badge {
+                                background: transparent;
+                                foreground: Palette.alternate-foreground;
+                                text: file.filament-used-gram > 0 
+                                    ? file.filament-type + " " + file.filament-used-gram + "g"
+                                    : file.filament-type;
+                            }
+                        }
+
+                        if file.height-mm > 0: HorizontalEnd {
+                            Badge {
+                                background: transparent;
+                                foreground: Palette.alternate-foreground;
+                                spacing: Constants.spacing-half / 4;
+                                icon: Icons.height;
+                                text: file.height-mm + "mm";
+                            }
+                        }
+
+                        if file.layer-height-mm > 0: HorizontalEnd {
+                            Badge {
+                                background: transparent;
+                                foreground: Palette.alternate-foreground;
+                                icon: Icons.layer-height;
+                                text: file.layer-height-mm + "mm";
+                            }
+                        }
+
+                        if file.nozzle-diameter-mm > 0: HorizontalEnd {
+                            Badge {
+                                background: transparent;
+                                foreground: Palette.alternate-foreground;
+                                icon: Icons.extruder;
+                                text: file.nozzle-diameter-mm + "mm";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 export component FileListPage inherits Page 
 {
     header: "Files";
@@ -64,16 +176,27 @@ export component FileListPage inherits Page
         }
     }
 
-    if selected_file.path != "": Rectangle {
-        height: 100%;
-        width: 100%;
-
-        VerticalStretch {
-            Text { text: "File: " + selected_file.path; font-weight: 900; overflow: elide; }
-            Text { text: "Size: " + Utils.format_bytes(selected_file.size); }
-            Text { text: "Modified: " + selected_file.modified; }
-            Text { text: "Permissions: " + selected_file.permissions; }
-            Button { text: "Close"; clicked => { root.selected_file = {}; thumbnail_index += 1; } }
+    if selected_file.path != "": FilePreview 
+    {
+        file: selected_file;
+        close => {
+            selected_file.path = "";
         }
+    }
+}
+
+component LivePreviewTest {
+    width: 480px - 100px;
+    height: 272px - 40px;
+
+    init => {
+        Filesystem.files = [
+            { path: "example.gcodeexample.gcodeexample.gcodeexample.gcodeexamsdfsdfsdfsfdsple.gcodeexample.gcodeexample.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--", thumbnail: Icons.print, filament_used_gram: 12.3, filament_type: "PLA", height_mm: 22.2, estimated_time_s: 300, layer_height_mm: 0.2, nozzle_diameter_mm: 0.4 },
+            { path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--", thumbnail: Icons.print, filament_used_gram: 12.3, filament_type: "PLA", height_mm: 22.2, estimated_time_s: 300, layer_height_mm: 0.2, nozzle_diameter_mm: 0.4 }
+        ]
+    }
+    
+    FileListPage {
+
     }
 }
