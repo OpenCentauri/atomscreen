@@ -1,0 +1,180 @@
+import { Page } from "../components/page.slint";
+import { PrintStatus, Utils, Filesystem } from "../state.slint";
+import { HorizontalStretch, HorizontalCenter } from "../components/horizontal.slint";
+import { VerticalStretch, VerticalCenter } from "../components/vertical.slint";
+import { Icons, Constants } from "../constants.slint";
+import { ProgressIndicator, Palette } from "std-widgets.slint";
+
+export component StatusButton inherits Rectangle {
+    in property<image> icon;
+    in property<string> text;
+
+    clip: true;
+    border-radius: Constants.radius-md;
+    background: Palette.selection-background;
+    height: self.width;
+
+    callback clicked();
+
+    states [
+        pressed when touch-area.pressed : {
+            root.opacity: 0.5;
+        }
+    ]
+
+    touch-area := TouchArea {
+        clicked => { root.clicked(); }
+    }
+
+    VerticalCenter {
+        padding: Constants.padding-half / 2;
+        spacing: Constants.spacing-half / 2;
+
+        Image {
+            source: root.icon;
+            colorize: Palette.foreground;
+            horizontal-alignment: center;
+        }
+
+        if root.text != "": Text {
+            text: root.text;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+export component PrintStatusPage inherits Page 
+{
+    init => {
+        if (Utils.image_exists(Filesystem.high_res_thumbnail)) {
+            Filesystem.load_high_res_thumbnail(PrintStatus.filename);
+        }
+    }
+
+    HorizontalStretch {}
+
+    HorizontalStretch {
+        VerticalStretch {
+            spacing: Constants.spacing-half;
+            Text {
+                text: PrintStatus.filename;
+                horizontal-alignment: center;
+                overflow: elide;
+            }
+
+
+            Image {
+                vertical-stretch: 1;
+                source: Utils.image_exists(Filesystem.high_res_thumbnail) ? Filesystem.high_res_thumbnail : Icons.file;
+                image-fit: ImageFit.contain;
+            }
+
+            HorizontalCenter {
+                alignment: space-between;
+
+                Text {
+                    text: "Layer " + PrintStatus.current_layer + " / " + PrintStatus.total_layers;
+                }
+
+                Text {
+                    text: "-" + Utils.time_in_seconds_to_string(PrintStatus.estimated_time);
+                }
+            }
+
+            HorizontalStretch {
+                spacing: Constants.spacing-half;
+                Rectangle {
+                    height: Constants.font-size-md;
+                    horizontal-stretch: 1;
+                    border-radius: Constants.radius-lg;
+                    clip: true;
+                    ProgressIndicator {
+                        width: parent.width;
+                        height: parent.height;
+                        progress: PrintStatus.progress;
+                    }
+                }
+
+                Text {
+                    text: PrintStatus.progress * 100 + " %";
+                    vertical-alignment: center;
+                }
+            }
+
+        }
+
+        Rectangle {
+            width: 35%;
+            //background: red;
+
+            VerticalStretch {
+                spacing: Constants.spacing-half;
+                HorizontalStretch {
+                    spacing: Constants.spacing-half;
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        text: "100%";
+                    }
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        text: "100%";
+                    }
+                }
+                HorizontalStretch {
+                    spacing: Constants.spacing-half;
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        text: "100%";
+                    }
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        text: "100%";
+                    }
+                }
+
+                Rectangle {
+
+                }
+
+                HorizontalStretch {
+                    spacing: Constants.spacing-half;
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        //text: "100%";
+                    }
+                    StatusButton {
+                        icon: Icons.file;
+                        horizontal-stretch: 1;
+                        //text: "100%";
+                    }
+                }
+            }
+        }
+    }
+}
+
+component LivePreviewTest {
+    width: 480px - 100px;
+    height: 272px - 40px;
+
+    init => {
+        PrintStatus.progress = 0.45;
+        PrintStatus.total_layers = 150;
+        PrintStatus.current_layer = 67;
+        PrintStatus.elapsed_time = 3600; // 1 hour
+        PrintStatus.estimated_time = 7200; // 2 hours
+        PrintStatus.filename = "test_print.gcode";
+        PrintStatus.speed_factor = 1.0;
+        PrintStatus.extruder_factor = 1.0;
+        PrintStatus.z_offset = 0.0;
+    }
+    
+    PrintStatusPage {
+
+    }
+}

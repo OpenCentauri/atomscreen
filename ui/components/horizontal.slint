@@ -18,6 +18,10 @@ export component HorizontalEnd inherits HorizontalStart  {
     alignment: LayoutAlignment.end;
 }
 
+export component HorizontalSpaceBetween inherits HorizontalStart {
+    alignment: LayoutAlignment.space-between;
+}
+
 export component HorizontalScrollable inherits Flickable {
     in property <length> list-padding <=> layout.padding;
     in property <length> list-spacing <=> layout.spacing;

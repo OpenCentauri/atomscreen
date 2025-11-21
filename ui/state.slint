@@ -15,7 +15,24 @@ export global TemperatureSensors
 export global DisplayStatus 
 {
     in-out property<string> message: "Slint demo viewer";
+}
+
+export global PrintStatus 
+{
     in-out property<float> progress; // 0 -> 1
+    in-out property<int> total_layers;
+    in-out property<int> current_layer;
+    in-out property<float> elapsed_time; // seconds
+    in-out property<float> estimated_time; // seconds
+    in-out property<string> filename;
+    in-out property<int> speed_factor; // 0 -> 1 (and beyond)
+    in-out property<float> extruder_factor; // 0 -> 1 (and beyond)
+    in-out property<float> z_offset; // in mm
+    in-out property<bool> is_printing;
+
+    callback set_speed_factor(factor: int);
+    callback set_extruder_factor(factor: float);
+    callback set_z_offset(offset: float);
 }
 
 export global PrinterAdministration
