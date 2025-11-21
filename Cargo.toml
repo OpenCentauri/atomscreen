@@ -6,15 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-slint = {version = "1", features = ["renderer-software"]}
+slint = {version = "1", default-features = false, features = ["renderer-software", "compat-1-2", "std"]}
 toml = "0"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
 serde = "1.0"
 tokio = { version = "1", features = ["full"]}
-moonraker-rs = { path = "./moonraker-rs"}
+moonraker-rs = { path = "./moonraker-rs" }
 image = { version = "0", default-features = false, features = ["png"] }
 optional_struct = "0"
+
+[features]
+pc = ["slint/accessibility", "slint/backend-default", "slint/renderer-femtovg"]
 
 [target.'cfg(unix)'.dependencies]
 evdev = "0"
@@ -33,3 +36,5 @@ image = "cross-armv7:latest"
 [profile.release]
 strip = true
 lto = true
+opt-level = "z"
+codegen-units = 1

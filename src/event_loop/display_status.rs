@@ -1,7 +1,7 @@
 use moonraker_rs::connector::websocket_read::PrinterEvent;
 use slint::{ComponentHandle, SharedString};
 
-use crate::{application_error::ApplicationError, event_loop::EventLoop, DisplayStatus};
+use crate::{application_error::ApplicationError, event_loop::EventLoop, DisplayStatus, PrintStatus};
 
 impl EventLoop {
     pub fn handle_display_status_updates(
@@ -14,7 +14,7 @@ impl EventLoop {
 
             self.ui_weak.upgrade_in_event_loop(move |ui| {
                 ui.global::<DisplayStatus>().set_message(message);
-                ui.global::<DisplayStatus>().set_progress(progress);
+                ui.global::<PrintStatus>().set_progress(progress);
             })?;
         }
         
