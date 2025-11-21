@@ -1,0 +1,290 @@
+import "../AdwaitaSans-Regular.ttf";
+import { ScrollView, Button, Spinner, StyleMetrics, Palette } from "std-widgets.slint";
+
+export struct Task {
+    name: string,
+    state: int, // 0 - none, 1 - running, 2 - success, 3 - fail
+    message: string
+}
+
+export global State {
+    in-out property <[string]> actions;
+    in-out property <string> active-action;
+    in-out property <int> active-action-state;
+    in-out property <[Task]> active-action-tasks;
+    in-out property <[string]> active-action-buttons;
+    in-out property <string> window-title;
+
+    callback action-button-click(name: string);
+    callback action-start(name: string);
+}
+
+export component ActionState inherits Rectangle {
+    in property <int> state;
+    property <int> rotation: 0;
+
+    timer := Timer {
+        interval: 32ms;
+        running: true;
+        triggered() => {
+            rotation += 5;
+
+            if rotation >= 360 {
+                rotation = 0;
+            }
+        }
+    }
+
+    width: 32px;
+    height: 32px;
+
+    if state == 1: Image {
+        source: @image-url("./assets/spinner.svg");
+        width: 100%;
+        colorize: Palette.control-foreground;
+        transform-rotation: rotation * 1deg;
+    }
+
+    if state == 2: Image {
+        source: @image-url("./assets/check.svg");
+        width: 100%;
+        colorize: Palette.control-foreground;
+    }
+
+    if state == 3: Image {
+        source: @image-url("./assets/error.svg");
+        width: 100%;
+        colorize: Palette.control-foreground;
+    }
+}
+
+export component TaskEntry {
+    in property <Task> task;
+    property <int> rotation: 0;
+
+    timer := Timer {
+        interval: 32ms;
+        running: true;
+        triggered() => {
+            rotation += 5;
+
+            if rotation >= 360 {
+                rotation = 0;
+            }
+        }
+    }
+
+    VerticalLayout {
+        alignment: LayoutAlignment.start;
+        spacing: StyleMetrics.layout-spacing / 2;
+        HorizontalLayout {
+            height: 32px;
+            spacing: StyleMetrics.layout-spacing;
+            alignment: LayoutAlignment.start;
+
+            ActionState {
+                state: task.state;
+            }
+
+            Text {
+                font-weight: 800;
+                font-size: 16px;
+                text: task.name;
+                vertical-alignment: center;
+            }
+        }
+
+        if task.message != "": HorizontalLayout {
+            alignment: LayoutAlignment.start;
+            padding-left: 32px + StyleMetrics.layout-spacing;
+            Text {
+                text: task.message;
+            }
+        }
+    }
+}
+
+export component ActionEntry {
+    in property <string> action;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.stretch;
+        spacing: StyleMetrics.layout-spacing;
+
+        Text {
+            horizontal-stretch: 0;
+            text: action;
+            vertical-alignment: center;
+        }
+
+        Rectangle { 
+            horizontal-stretch: 1;
+        }
+
+        Button {
+            icon: @image-url("./assets/run.svg");
+            colorize-icon: true;
+            text: "Run";
+            clicked => {
+                State.action-start(action);
+            }
+        }
+    }
+}
+
+export component TaskList {
+    property tasks <=> State.active-action-tasks;
+
+    changed tasks => {
+        scroll.viewport-y = -99999999px;
+    }
+
+    VerticalLayout {
+        alignment: LayoutAlignment.stretch;
+        padding: StyleMetrics.layout-padding / 2;
+        spacing: StyleMetrics.layout-spacing / 2;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            spacing: StyleMetrics.layout-spacing;
+
+            ActionState {
+                state: State.active-action-state;
+            }
+
+            Text {
+                text: State.active-action;
+                font-size: 18px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        Rectangle { 
+            background: Palette.alternate-background;
+            border-radius: 10px;
+            VerticalLayout {
+                padding: StyleMetrics.layout-padding / 2;
+                vertical-stretch: 1;
+                alignment: LayoutAlignment.stretch;
+
+                scroll := ScrollView {
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                        
+                        alignment: LayoutAlignment.start;
+                        spacing: StyleMetrics.layout-spacing;
+
+                        for task in tasks: TaskEntry {
+                            task: task;
+                        }
+                    }
+                }
+            }
+        }
+
+        if State.active-action-buttons.length > 0: HorizontalLayout {
+            alignment: LayoutAlignment.stretch;
+            spacing: StyleMetrics.layout-spacing;
+
+            for button-action in State.active-action-buttons: Button {
+                text: button-action;
+                clicked => {
+                    State.action-button-click(button-action);
+                }
+            }
+        }
+    }
+}
+
+export component ActionList {
+    VerticalLayout {
+        alignment: LayoutAlignment.stretch;
+        padding: StyleMetrics.layout-padding / 2;
+        spacing: StyleMetrics.layout-spacing / 2;
+
+        Text {
+            text: State.window-title;
+            font-size: 18px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        Rectangle { 
+            background: Palette.alternate-background;
+            border-radius: 10px;
+            VerticalLayout {
+                padding: StyleMetrics.layout-padding;
+                vertical-stretch: 1;
+                alignment: LayoutAlignment.stretch;
+
+                ScrollView {
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.start;
+                        spacing: StyleMetrics.layout-spacing;
+
+                        for action in State.actions: ActionEntry {
+                            action: action;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+export component AppWindow inherits Window {
+    default-font-family: "Adwaita Sans";
+
+    if State.active-action == "": ActionList {
+        width: 100%;
+        height: 100%;
+    }
+
+    if State.active-action != "": TaskList {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+component TestTaskList {
+    width: 480px;
+    height: 272px;
+
+    init => {
+        State.active-action-tasks = [
+            { name: "Idle", state: 0, message: "" },
+            { name: "Running", state: 1, message: "" },
+            { name: "Success", state: 2, message: "Result of success" },
+            { name: "Error", state: 3, message: "" },
+        ];
+
+        State.active-action = "Test-action";
+        State.active-action-buttons = ["Back", "Reboot"];
+        State.active-action-state = 1;
+    }
+
+    TaskList {
+        width: 480px;
+        height: 272px;
+    }
+}
+
+component TestActionList {
+    width: 480px;
+    height: 272px;
+
+    init => {
+        State.window-title = "OpenCentauri recovery";
+        State.actions = ["Install Patched Firmware (Online)", "Install Patched Firmware (Offline)", "Reboot"]
+    }
+    
+    ActionList {
+        width: 480px;
+        height: 272px;
+    }
+}

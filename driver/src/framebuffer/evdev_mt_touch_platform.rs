@@ -6,7 +6,7 @@ use slint::{
     LogicalPosition,
 };
 
-use crate::hardware::TouchPlatform;
+use crate::framebuffer::framebuffer_platform::TouchPlatform;
 
 pub struct EvdevMtTouchPlatform {
     touch_device: RefCell<evdev::Device>,

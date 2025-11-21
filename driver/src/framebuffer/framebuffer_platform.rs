@@ -19,7 +19,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::hardware::EvdevMtTouchPlatform;
+use crate::framebuffer::evdev_mt_touch_platform::EvdevMtTouchPlatform;
 
 trait FramebufferHandler
 {

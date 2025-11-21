@@ -20,15 +20,13 @@ optional_struct = "0"
 pc = ["slint/accessibility", "slint/backend-default", "slint/renderer-femtovg"]
 
 [target.'cfg(unix)'.dependencies]
-evdev = "0"
-linuxfb = "0"
-memmap = "0"
+driver = { path = "./driver" }
 
 [build-dependencies]
 slint-build = "1.12.1"
 
 [workspace]
-members = ["moonraker-rs"]
+members = ["driver","moonraker-rs"]
 
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
 image = "cross-armv7:latest"

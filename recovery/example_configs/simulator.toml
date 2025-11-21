@@ -1,0 +1,31 @@
+window_title = "Atomscreen recovery"
+
+[display.default]
+width = 480
+height = 272
+
+[scripts."Script 1"]
+hide_pending_tasks = true
+
+[[scripts."Script 1".tasks]]
+name = "Test0"
+command = ["/bin/sh", "-c", "exit 0"]
+
+[[scripts."Script 1".tasks]]
+name = "Test00"
+command = ["/bin/sh", "-c", "exit 0"]
+
+[[scripts."Script 1".tasks]]
+name = "Test1"
+command = ["/bin/sh", "-c", "sleep 5; echo \"Hi hello test\""]
+show_stdout = true
+
+[[scripts."Script 1".tasks]]
+name = "Test2"
+command = ["/bin/sh", "-c", "sleep 5; echo \"Test2\"; exit 1"]
+show_stdout = true
+stop_on_failure = false
+
+[[scripts."Script 1".tasks]]
+name = "Test3"
+command = ["/bin/sh", "-c", "sleep 5; echo \"Test3\"; exit 1"]
