@@ -21,28 +21,15 @@ export global State {
 
 export component ActionState inherits Rectangle {
     in property <int> state;
-    property <int> rotation: 0;
-
-    timer := Timer {
-        interval: 32ms;
-        running: true;
-        triggered() => {
-            rotation += 5;
-
-            if rotation >= 360 {
-                rotation = 0;
-            }
-        }
-    }
-
+    
     width: 32px;
     height: 32px;
-
+    
     if state == 1: Image {
         source: @image-url("./assets/spinner.svg");
         width: 100%;
         colorize: Palette.control-foreground;
-        transform-rotation: rotation * 1deg;
+        transform-rotation: 360deg * animation-tick() / 1.5s;
     }
 
     if state == 2: Image {
@@ -60,19 +47,6 @@ export component ActionState inherits Rectangle {
 
 export component TaskEntry {
     in property <Task> task;
-    property <int> rotation: 0;
-
-    timer := Timer {
-        interval: 32ms;
-        running: true;
-        triggered() => {
-            rotation += 5;
-
-            if rotation >= 360 {
-                rotation = 0;
-            }
-        }
-    }
 
     VerticalLayout {
         alignment: LayoutAlignment.start;
@@ -136,7 +110,7 @@ export component TaskList {
     property tasks <=> State.active-action-tasks;
 
     changed tasks => {
-        scroll.viewport-y = -99999999px;
+        scroll.viewport-y = -9999px;
     }
 
     VerticalLayout {

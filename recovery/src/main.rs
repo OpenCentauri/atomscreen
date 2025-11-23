@@ -1,9 +1,7 @@
 use std::{collections::HashMap, env, fs};
-
-use indexmap::IndexMap;
 use slint::{ModelRc, SharedString, VecModel};
 
-use crate::config::{DisplayConfig, DisplayInit, Script, ScriptInner, ScriptTaskRaw};
+use crate::config::{DisplayConfig, DisplayInit, Script, ScriptInner};
 
 mod config;
 mod task_exec;
@@ -23,11 +21,19 @@ fn init_display(config: &DisplayConfig) -> AppWindow {
     panic!("No display driver configured");
 }
 
-fn to_list(hashmap: IndexMap<String, ScriptInner>) -> Vec<Script> {
+fn to_list(hashmap: HashMap<String, ScriptInner>) -> Vec<Script> {
     let mut list = Vec::new();
+    let mut temp_list = Vec::new();
 
     for (name, inner) in hashmap {
-        list.push(Script::from_inner(inner, name));
+        let index = inner.index.unwrap_or_default();
+        temp_list.push((index, Script::from_inner(inner, name)));
+    }
+
+    temp_list.sort_by_key(|(index, _)| *index);
+
+    for (_, script) in temp_list {
+        list.push(script);
     }
 
     list

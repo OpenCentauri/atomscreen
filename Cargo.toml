@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-slint = {version = "1", default-features = false, features = ["renderer-software", "compat-1-2", "std"]}
+slint = {git = "https://github.com/slint-ui/slint", default-features = false, features = ["renderer-software", "compat-1-2", "std"]}
 toml = "0"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
@@ -23,7 +23,7 @@ pc = ["slint/accessibility", "slint/backend-default", "slint/renderer-femtovg"]
 driver = { path = "./driver" }
 
 [build-dependencies]
-slint-build = "1.12.1"
+slint-build = { git = "https://github.com/slint-ui/slint", package = "slint-build" }
 
 [workspace]
 members = ["driver","moonraker-rs"]

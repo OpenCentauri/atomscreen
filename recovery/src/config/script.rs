@@ -19,6 +19,7 @@ pub struct ScriptInner {
     pub completed_actions: Option<Vec<ScriptButtonAction>>,
     pub tasks: Vec<ScriptTaskRaw>,
     pub hide_pending_tasks: Option<bool>,
+    pub index: Option<usize>,
 }
 
 #[derive(Clone)]
