@@ -1,0 +1,46 @@
+name: Recovery build
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "recovery/**"
+      - "driver/**"
+
+jobs:
+  release:
+    name: Recovery release build - ${{ matrix.platform.os-name }}
+    strategy:
+      matrix:
+        platform:
+          - os-name: Linux-armv7
+            runs-on: ubuntu-24.04
+            target: armv7-unknown-linux-musleabihf
+
+    runs-on: ${{ matrix.platform.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build container
+        run: docker build -t cross-armv7:latest -f armv7.dockerfile .
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
+
+      - name: Install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build binary
+        run: |
+          cd recovery
+          cross build --target ${{ matrix.platform.target }} --locked --release
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.os-name }}
+          path: recovery/target/${{ matrix.platform.target }}/release/recovery
