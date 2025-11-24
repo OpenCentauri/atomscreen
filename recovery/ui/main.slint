@@ -14,6 +14,7 @@ export global State {
     in-out property <[Task]> active-action-tasks;
     in-out property <[string]> active-action-buttons;
     in-out property <string> window-title;
+    in-out property <int> spinner-rotation;
 
     callback action-button-click(name: string);
     callback action-start(name: string);
@@ -21,31 +22,18 @@ export global State {
 
 export component ActionState inherits Rectangle {
     in property <int> state;
-    property <int> rotation: 0;
-
-    timer := Timer {
-        interval: 150ms;
-        running: true;
-        triggered => {
-            rotation += 1;
-
-            if rotation >= 8 {
-                rotation = 0;
-            }
-        }
-    }
     
     width: 32px;
     height: 32px;
     
     if state == 1: Image {
-        source: rotation == 0 ? @image-url("./assets/spinner.svg") :
-                rotation == 1 ? @image-url("./assets/spinner-45.svg") :
-                rotation == 2 ? @image-url("./assets/spinner-90.svg") :
-                rotation == 3 ? @image-url("./assets/spinner-135.svg") :
-                rotation == 4 ? @image-url("./assets/spinner-180.svg") :
-                rotation == 5 ? @image-url("./assets/spinner-225.svg") :
-                rotation == 6 ? @image-url("./assets/spinner-270.svg") :
+        source: State.spinner-rotation == 0 ? @image-url("./assets/spinner.svg") :
+                State.spinner-rotation == 1 ? @image-url("./assets/spinner-45.svg") :
+                State.spinner-rotation == 2 ? @image-url("./assets/spinner-90.svg") :
+                State.spinner-rotation == 3 ? @image-url("./assets/spinner-135.svg") :
+                State.spinner-rotation == 4 ? @image-url("./assets/spinner-180.svg") :
+                State.spinner-rotation == 5 ? @image-url("./assets/spinner-225.svg") :
+                State.spinner-rotation == 6 ? @image-url("./assets/spinner-270.svg") :
                                @image-url("./assets/spinner-315.svg");
         width: 100%;
         colorize: Palette.control-foreground;
@@ -232,6 +220,18 @@ export component ActionList {
 
 export component AppWindow inherits Window {
     default-font-family: "Adwaita Sans";
+
+    timer := Timer {
+        interval: 150ms;
+        running: true;
+        triggered => {
+            State.spinner-rotation += 1;
+
+            if State.spinner-rotation >= 8 {
+                State.spinner-rotation = 0;
+            }
+        }
+    }
 
     if State.active-action == "": ActionList {
         width: 100%;
