@@ -211,15 +211,18 @@ impl Platform for FramebufferPlatform {
             }
 
             if let Some(touch_device) = &self.touch_device {
-                let now = Instant::now();
+                //let now = Instant::now();
                 let events = touch_device.process_touch_events();
-                let elapsed = now.elapsed();
+                //let has_event = !events.is_empty();
 
                 for event in events {
                     //println!("Got event {:?}", event);
-                    //println!("Elapsed: {:.2?}", elapsed);
                     self.window.try_dispatch_event(event).unwrap();
                 }
+
+                //if has_event {
+                //    println!("Elapsed: {:.2?}", now.elapsed());
+                //}
             }
 
             self.window.draw_if_needed(|renderer| {
@@ -241,7 +244,9 @@ impl Platform for FramebufferPlatform {
                 fb.flip().unwrap();
             });
 
-            if !self.window.has_active_animations() {
+            let queue_length = queue.0.lock().unwrap().len();
+
+            if !self.window.has_active_animations() && queue_length <= 0 {
                 std::thread::park_timeout(
                     slint::platform::duration_until_next_timer_update()
                         .unwrap_or(Duration::from_millis(20)),

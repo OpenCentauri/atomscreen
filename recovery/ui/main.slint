@@ -223,7 +223,7 @@ export component AppWindow inherits Window {
 
     timer := Timer {
         interval: 150ms;
-        running: true;
+        running: State.active-action != "";
         triggered => {
             State.spinner-rotation += 1;
 
