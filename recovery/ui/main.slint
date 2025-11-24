@@ -21,15 +21,34 @@ export global State {
 
 export component ActionState inherits Rectangle {
     in property <int> state;
+    property <int> rotation: 0;
+
+    timer := Timer {
+        interval: 150ms;
+        running: true;
+        triggered => {
+            rotation += 1;
+
+            if rotation >= 8 {
+                rotation = 0;
+            }
+        }
+    }
     
     width: 32px;
     height: 32px;
     
     if state == 1: Image {
-        source: @image-url("./assets/spinner.svg");
+        source: rotation == 0 ? @image-url("./assets/spinner.svg") :
+                rotation == 1 ? @image-url("./assets/spinner-45.svg") :
+                rotation == 2 ? @image-url("./assets/spinner-90.svg") :
+                rotation == 3 ? @image-url("./assets/spinner-135.svg") :
+                rotation == 4 ? @image-url("./assets/spinner-180.svg") :
+                rotation == 5 ? @image-url("./assets/spinner-225.svg") :
+                rotation == 6 ? @image-url("./assets/spinner-270.svg") :
+                               @image-url("./assets/spinner-315.svg");
         width: 100%;
         colorize: Palette.control-foreground;
-        transform-rotation: 360deg * animation-tick() / 1.5s;
     }
 
     if state == 2: Image {
