@@ -99,6 +99,7 @@ component ReadOnlyTemperatureElement inherits HorizontalStretch {
     }
 }
 
+// TODO: Split this off into a seperate page so you can make a sidebar entry out of it
 export component FilamentMenuDialog inherits Rectangle {
     callback close();
     callback on_manual_entry(internal-name : string, friendly-name : string); // TODO: Make the temp numpad a popup
