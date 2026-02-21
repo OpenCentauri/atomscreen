@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use moonraker_rs::{connector::websocket_read::{MoonrakerEvent, PrinterEvent}, moonraker_connection::{MoonrakerConnection, WebsocketEvent}};
+use moonraker_rs::{connector::websocket_read::{MoonrakerEvent, PrinterEvent}, moonraker_connection::{MoonrakerConnection, WebsocketEvent}, printer_objects::PrintState};
 use slint::{ComponentHandle, Weak};
 
 use crate::{application_error::ApplicationError, Webhooks, AppWindow};
@@ -8,7 +8,10 @@ use crate::{application_error::ApplicationError, Webhooks, AppWindow};
 pub struct EventLoop
 {
     pub ui_weak : Weak<AppWindow>,
-    pub moonraker_connection : Arc<MoonrakerConnection>   
+    pub moonraker_connection : Arc<MoonrakerConnection>,
+    pub last_state: PrintState,
+    pub slicer_time_estimate : Option<u64>,
+    pub progress: f32, // TODO: Figure out a better way to track this, probably directly from the moonraker connection.
 }
 
 //pub trait EventLoopListener
@@ -20,7 +23,7 @@ impl EventLoop
 {
     pub fn new(ui_weak : Weak<AppWindow>, moonraker_connection : Arc<MoonrakerConnection>) -> EventLoop
     {
-        EventLoop { ui_weak: ui_weak, moonraker_connection: moonraker_connection }
+        EventLoop { ui_weak: ui_weak, moonraker_connection: moonraker_connection, last_state: PrintState::Standby, slicer_time_estimate: None, progress: 0.0 }
     }
 
     pub async fn event_loop(&mut self)
@@ -91,6 +94,7 @@ impl EventLoop
         self.handle_temperature_devices_update(printer_event)?;
         self.handle_klipper_state_updates(printer_event)?;
         self.handle_display_status_updates(printer_event)?;
+        self.handle_print_stats_updates(printer_event).await?;
 
         Ok(())
     }

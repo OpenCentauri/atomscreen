@@ -12,8 +12,10 @@ heater_bed = [ 60, 70 ]
 
 [ui]
 dark_mode = true
-left_sidebar = ["files", "temperature", "move", "emergency_stop"]
-right_sidebar = ["fan", "macros", "console", "settings"]
+left_sidebar = ["files", "temperature", "move", "macros", "emergency_stop"]
+right_sidebar = []
+#left_sidebar = ["files", "temperature", "move", "emergency_stop"]
+#right_sidebar = ["fan", "macros", "console", "settings"]
 
 [quick_actions]
 Restart = ["RESTART"]

@@ -40,3 +40,13 @@ export struct PowerDevice
     locked_while_printing: bool,
     device_type: string,
 }
+
+
+export struct PrintStatusState {
+    is_standby: bool,
+    is_printing: bool,
+    is_paused: bool,
+    is_complete: bool,
+    is_error: bool,
+    is_cancelled: bool,
+}

@@ -110,6 +110,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     register_misc_set_power_device(&ui, &moonraker_connection);
     register_misc_fetch_power_devices(&ui, &moonraker_connection);
 
+    register_printjob_start(&ui, &moonraker_connection);
+    register_printjob_resume(&ui, &moonraker_connection);
+    register_printjob_pause(&ui, &moonraker_connection);
+    register_printjob_stop(&ui, &moonraker_connection);
+
     tokio::task::block_in_place(|| {
         ui.run().unwrap();
     });

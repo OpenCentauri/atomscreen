@@ -16,6 +16,10 @@ pub trait PrinterAdministrationRequestHandler {
     async fn emergency_stop(&self) -> Result<String, Error>;
     async fn restart(&self) -> Result<String, Error>;
     async fn firmware_restart(&self) -> Result<String, Error>;
+    async fn start_print(&self, filename: &str) -> Result<String, Error>;
+    async fn resume_print(&self) -> Result<String, Error>;
+    async fn pause_print(&self) -> Result<String, Error>;
+    async fn stop_print(&self) -> Result<String, Error>;
 }
 
 impl PrinterAdministrationRequestHandler for MoonrakerConnection {
@@ -55,6 +59,23 @@ impl PrinterAdministrationRequestHandler for MoonrakerConnection {
 
     async fn firmware_restart(&self) -> Result<String, Error> {
         self.send_request("printer.firmware_restart", None).await
+    }
+    
+    async fn start_print(&self, filename: &str) -> Result<String, Error> {
+        let args = serde_json::json!({ "filename": filename });
+        self.send_request("printer.print.start", Some(args)).await
+    }
+    
+    async fn resume_print(&self) -> Result<String, Error> {
+        self.send_request("printer.print.resume", None).await
+    }
+    
+    async fn pause_print(&self) -> Result<String, Error> {
+        self.send_request("printer.print.pause", None).await
+    }
+    
+    async fn stop_print(&self) -> Result<String, Error> {
+        self.send_request("printer.print.cancel", None).await
     }
 }
 

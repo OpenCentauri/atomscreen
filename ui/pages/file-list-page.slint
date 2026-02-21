@@ -108,7 +108,7 @@ export component FilePreview inherits Rectangle
                         spacing: 0;
                         padding: Constants.padding-half;
 
-                        if file.filament_type != "": HorizontalEnd {
+                        if file.filament_type != "": HorizontalCenter {
                             Badge {
                                 background: transparent;
                                 foreground: Palette.alternate-foreground;
@@ -118,7 +118,7 @@ export component FilePreview inherits Rectangle
                             }
                         }
 
-                        if file.height-mm > 0: HorizontalEnd {
+                        if file.height-mm > 0: HorizontalCenter {
                             Badge {
                                 background: transparent;
                                 foreground: Palette.alternate-foreground;
@@ -128,7 +128,7 @@ export component FilePreview inherits Rectangle
                             }
                         }
 
-                        if file.layer-height-mm > 0: HorizontalEnd {
+                        if file.layer-height-mm > 0: HorizontalCenter {
                             Badge {
                                 background: transparent;
                                 foreground: Palette.alternate-foreground;
@@ -137,7 +137,7 @@ export component FilePreview inherits Rectangle
                             }
                         }
 
-                        if file.nozzle-diameter-mm > 0: HorizontalEnd {
+                        if file.nozzle-diameter-mm > 0: HorizontalCenter {
                             Badge {
                                 background: transparent;
                                 foreground: Palette.alternate-foreground;
@@ -179,6 +179,10 @@ export component FileListPage inherits Page
     if selected_file.path != "": FilePreview 
     {
         file: selected_file;
+        print => {
+            Filesystem.start_file(selected_file.path);
+            selected_file.path = "";
+        }
         close => {
             selected_file.path = "";
         }

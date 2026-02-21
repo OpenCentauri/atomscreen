@@ -1,4 +1,4 @@
-import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile, PowerDevice } from "types.slint";
+import { TemperatureSensor, HeaterFan, Heater, MoonrakerFile, PowerDevice, PrintStatusState } from "types.slint";
 import { Palette } from "std-widgets.slint";
 import { Icons } from "constants.slint";
 
@@ -16,7 +16,6 @@ export global DisplayStatus
 {
     in-out property<string> message: "Slint demo viewer";
 }
-
 export global PrintStatus 
 {
     in-out property<float> progress; // 0 -> 1
@@ -28,11 +27,14 @@ export global PrintStatus
     in-out property<int> speed_factor; // 0 -> 1 (and beyond)
     in-out property<float> extruder_factor; // 0 -> 1 (and beyond)
     in-out property<float> z_offset; // in mm
-    in-out property<bool> is_printing;
+    in-out property<PrintStatusState> state;
 
     callback set_speed_factor(factor: int);
     callback set_extruder_factor(factor: float);
     callback set_z_offset(offset: float);
+    callback pause_print();
+    callback resume_print();
+    callback stop_print();
 }
 
 export global PrinterAdministration
@@ -40,6 +42,7 @@ export global PrinterAdministration
     callback emergency_stop();
     callback restart();
     callback firmware_restart();
+    callback toggle_light();
 }
 
 export global GcodeCommands
@@ -67,6 +70,7 @@ export global Filesystem
     callback list_files();
     callback fetch_metadata(index : int);
     callback load_high_res_thumbnail(file_path : string);
+    callback start_file(file_path : string);
     in-out property <image> high_res_thumbnail;
     in-out property <[MoonrakerFile]> files: [{
         path: "example.gcode", modified: 123456.0, size: 12345, permissions: "rw-r--r--",

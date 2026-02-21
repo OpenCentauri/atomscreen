@@ -1,7 +1,7 @@
 import { Page } from "../components/page.slint";
 import { PrintStatus, Utils, Filesystem } from "../state.slint";
 import { HorizontalStretch, HorizontalCenter } from "../components/horizontal.slint";
-import { VerticalStretch, VerticalCenter } from "../components/vertical.slint";
+import { VerticalStretch, VerticalCenter, VerticalEnd } from "../components/vertical.slint";
 import { Icons, Constants } from "../constants.slint";
 import { ProgressIndicator, Palette } from "std-widgets.slint";
 
@@ -27,8 +27,8 @@ export component StatusButton inherits Rectangle {
     }
 
     VerticalCenter {
-        padding: Constants.padding-half / 2;
-        spacing: Constants.spacing-half / 2;
+        padding: Constants.padding-half;
+        spacing: Constants.spacing-half;
 
         Image {
             source: root.icon;
@@ -46,7 +46,7 @@ export component StatusButton inherits Rectangle {
 export component PrintStatusPage inherits Page 
 {
     init => {
-        if (Utils.image_exists(Filesystem.high_res_thumbnail)) {
+        if (!Utils.image_exists(Filesystem.high_res_thumbnail)) {
             Filesystem.load_high_res_thumbnail(PrintStatus.filename);
         }
     }
@@ -96,13 +96,37 @@ export component PrintStatusPage inherits Page
                 }
 
                 Text {
-                    text: PrintStatus.progress * 100 + " %";
+                    text: round(PrintStatus.progress * 100) + " %";
                     vertical-alignment: center;
                 }
             }
 
         }
 
+        VerticalCenter {
+            width: 15%;
+            StatusButton {
+                height: 50px;
+                icon: Icons.power-device;
+            }
+            if PrintStatus.state.is-printing: StatusButton {
+                height: 50px;
+                icon: Icons.pause;
+                clicked => { PrintStatus.pause_print() }
+            }
+            if PrintStatus.state.is-paused: StatusButton {
+                height: 50px;
+                icon: Icons.start;
+                clicked => { PrintStatus.resume_print() }
+            }
+            StatusButton {
+                height: 50px;
+                icon: Icons.stop;
+                clicked => { PrintStatus.stop_print() }
+            }
+        }  
+
+/*
         Rectangle {
             width: 35%;
             //background: red;
@@ -155,6 +179,7 @@ export component PrintStatusPage inherits Page
                 }
             }
         }
+*/
     }
 }
 

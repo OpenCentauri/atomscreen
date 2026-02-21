@@ -1,7 +1,7 @@
 import { ProgressIndicator, Button, StyleMetrics, Palette, ScrollView, Slider, ComboBox, TabWidget } from "std-widgets.slint";
 import { VirtualKeyboardButton } from "virtual_keyboard.slint";
 import "../AdwaitaSans-Regular.ttf";
-import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks, UiSettings, ActiveUi } from "state.slint";
+import { TemperatureSensors, DisplayStatus, PrinterAdministration, GcodeCommands, Filesystem, Utils, Webhooks, UiSettings, ActiveUi, PrintStatus } from "state.slint";
 import { Heater, TemperatureSensor, MoonrakerFile } from "types.slint";
 import { Icons } from "constants.slint";
 import { Page } from "components/page.slint";
@@ -11,6 +11,7 @@ import { IconButton, LeftSideIconButton, RightSideIconButton } from "components/
 import { TemperatureEntry } from "components/number-pad.slint";
 import { TopBar } from "components/top-bar.slint";
 import { FileListPage } from "pages/file-list-page.slint";
+import { PrintStatusPage } from "pages/print-status-page.slint";
 import { BottomBarWithStatusMessage } from "components/bottom-bar.slint";
 import { YesNoPrompt } from "components/yes-no-prompt.slint";
 import { QuickActionsPage } from "pages/quick-actions-page.slint";
@@ -60,7 +61,8 @@ component MainView inherits Rectangle
                 border-bottom-right-radius: DisplayStatus.message == "" ? 0 : StyleMetrics.layout-padding / 2;
                 
                 if root.current-page == 1: TemperaturePage {}
-                if root.current-page == 0: FileListPage  {}
+                if root.current-page == 0 && (PrintStatus.state.is-printing || PrintStatus.state.is-paused): PrintStatusPage {}
+                if root.current-page == 0 && (PrintStatus.state.is-standby || PrintStatus.state.is-complete || PrintStatus.state.is-cancelled): FileListPage {}
                 if root.current-page == 5: QuickActionsPage {}
             }
 
