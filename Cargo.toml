@@ -29,7 +29,10 @@ slint-build = { git = "https://github.com/slint-ui/slint", package = "slint-buil
 members = ["driver","moonraker-rs"]
 
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
-image = "cross-armv7:latest"
+pre-build = [
+    "apt-get update",
+    "apt-get install -y libfontconfig1-dev libssl-dev openssl pkg-config",
+]
 
 [profile.release]
 strip = true

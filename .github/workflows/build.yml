@@ -30,10 +30,18 @@ jobs:
       - name: Install cross
         run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - name: Build binary
-        run: cross build --target ${{ matrix.platform.target }} --locked --release
+      - name: Build binaries
+        run: |
+          cross build --target ${{ matrix.platform.target }} --locked
+          cross build --target ${{ matrix.platform.target }} --locked --release
 
-      - name: Upload binary
+      - name: Upload debug binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.os-name }}-debug
+          path: target/${{ matrix.platform.target }}/debug/atomscreen
+
+      - name: Upload release binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.os-name }}

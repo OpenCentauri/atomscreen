@@ -243,7 +243,13 @@ impl MoonrakerConnection {
 
                     match parsed_result {
                         Ok(result) => return Ok(result),
-                        Err(e) => return Err(crate::error::Error::UnsupportedMessage(e)),
+                        Err(e) => {
+                            
+                            #[cfg(debug_assertions)]
+                            println!("Raw event: {}", serde_json::to_string(&reply.result).unwrap_or_default());
+
+                            return Err(crate::error::Error::UnsupportedMessage(e));
+                        },
                     }
                 }
 
