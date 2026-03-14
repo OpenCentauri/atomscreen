@@ -5,7 +5,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct Fan {
     pub speed: f32,
-    pub rpm: Option<i32>,
+    pub rpm: Option<f32>,
 }
 
 impl Fan {
