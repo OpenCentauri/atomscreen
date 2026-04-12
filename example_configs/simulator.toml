@@ -4,7 +4,7 @@ height = 272
 
 [moonraker]
 host = "192.168.178.165"
-port = 7125
+port = 80
 
 [heater_presets]
 extruder = [ 200, 240, 280, 290, 300, 310 ]
