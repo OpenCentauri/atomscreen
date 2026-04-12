@@ -12,7 +12,7 @@ tokio = { version = "1", features = ["full"]}
 hyper-util = "0"
 http-body-util = "0"
 optional_struct = "0"
-reqwest = "0"
+reqwest = { version = "0.13", default-features = false, features = ["native-tls"] }
 thiserror = "2"
 
 [target.armv7-unknown-linux-musleabihf.dependencies]
