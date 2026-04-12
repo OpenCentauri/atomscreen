@@ -66,6 +66,7 @@ pub fn register_filesystem_fetch_metadata(ui: &AppWindow, moonraker_connection :
 
                         // TODO: Error handling
                         let image = image::load_from_memory(&data).unwrap().into_rgba8();
+                        drop(data);
                         let shared_buf: SharedPixelBuffer<Rgba8Pixel> =
                             SharedPixelBuffer::clone_from_slice(
                                 image.as_raw(),

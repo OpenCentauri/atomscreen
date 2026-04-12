@@ -3,7 +3,7 @@ width = 480
 height = 272
 
 [moonraker]
-host = "localhost"
+host = "192.168.178.165"
 port = 7125
 
 [heater_presets]

@@ -104,11 +104,11 @@ impl MoonrakerConnection {
 
         // Moonraker -> us. TX = ws event bus, RX = misc listeners
         let (inbound_event_sender, inbound_event_listener) =
-            broadcast::channel::<Arc<WebsocketEvent>>(128);
+            broadcast::channel::<Arc<WebsocketEvent>>(16);
 
         // Us -> Moonraker. TX = send requests, RX = ws writer
         let (outbound_event_sender, outbound_event_listener) =
-            broadcast::channel::<Arc<OutboundMessage>>(128);
+            broadcast::channel::<Arc<OutboundMessage>>(16);
 
         MoonrakerConnection {
             host: host,

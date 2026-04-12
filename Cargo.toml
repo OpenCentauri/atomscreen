@@ -11,7 +11,7 @@ toml = "0"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
 serde = "1.0"
-tokio = { version = "1", features = ["full"]}
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "net", "io-util", "time"]}
 moonraker-rs = { path = "./moonraker-rs" }
 image = { version = "0", default-features = false, features = ["png"] }
 fontique = { version = "0.7.0", default-features = false, features = ["std", "system", "fontconfig-dlopen"] }

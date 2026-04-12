@@ -53,22 +53,25 @@ impl EventLoop {
                         .as_any()
                         .downcast_ref::<VecModel<TemperatureSensor>>();
 
-                    let mut entries = match &current_sensors {
-                        Some(model) => model.iter().collect::<Vec<TemperatureSensor>>(),
-                        None => vec![],
-                    };
+                    match current_sensors {
+                        Some(model) => {
+                            let index = (0..model.row_count())
+                                .find(|&i| model.row_data(i).map_or(false, |s| s.name == sensor_event.name));
 
-                    let index = entries
-                        .iter()
-                        .position(|sensor| sensor.name == sensor_event.name);
-
-                    match index {
-                        Some(index) => entries[index].temperature = sensor_event.temperature as i32,
-                        None => entries.push(sensor_event),
+                            match index {
+                                Some(i) => {
+                                    let mut entry = model.row_data(i).unwrap();
+                                    entry.temperature = sensor_event.temperature;
+                                    model.set_row_data(i, entry);
+                                }
+                                None => model.push(sensor_event),
+                            }
+                        }
+                        None => {
+                            ui.global::<TemperatureSensors>()
+                                .set_temperature_sensors(ModelRc::new(Rc::new(VecModel::from(vec![sensor_event]))));
+                        }
                     }
-
-                    ui.global::<TemperatureSensors>()
-                        .set_temperature_sensors(ModelRc::new(Rc::new(VecModel::from(entries))));
                 })?;
         }
 
@@ -84,11 +87,6 @@ impl EventLoop {
                         .as_any()
                         .downcast_ref::<VecModel<HeaterFan>>();
 
-                    let mut entries = match &current_sensors {
-                        Some(model) => model.iter().collect::<Vec<HeaterFan>>(),
-                        None => vec![],
-                    };
-
                     let sensor_event = HeaterFan {
                         heater: Heater {
                             name: SharedString::from(&temperature_fan_event.name),
@@ -99,21 +97,27 @@ impl EventLoop {
                         speed: temperature_fan_event.fan.speed,
                     };
 
-                    let index = entries
-                        .iter()
-                        .position(|sensor| sensor.heater.name == sensor_event.heater.name);
+                    match current_sensors {
+                        Some(model) => {
+                            let index = (0..model.row_count())
+                                .find(|&i| model.row_data(i).map_or(false, |s| s.heater.name == sensor_event.heater.name));
 
-                    match index {
-                        Some(index) => {
-                            entries[index].heater.temperature = sensor_event.heater.temperature;
-                            entries[index].heater.target = sensor_event.heater.target;
-                            entries[index].speed = sensor_event.speed;
-                        },
-                        None => entries.push(sensor_event),
+                            match index {
+                                Some(i) => {
+                                    let mut entry = model.row_data(i).unwrap();
+                                    entry.heater.temperature = sensor_event.heater.temperature;
+                                    entry.heater.target = sensor_event.heater.target;
+                                    entry.speed = sensor_event.speed;
+                                    model.set_row_data(i, entry);
+                                }
+                                None => model.push(sensor_event),
+                            }
+                        }
+                        None => {
+                            ui.global::<TemperatureSensors>()
+                                .set_heater_fans(ModelRc::new(Rc::new(VecModel::from(vec![sensor_event]))));
+                        }
                     }
-
-                    ui.global::<TemperatureSensors>()
-                        .set_heater_fans(ModelRc::new(Rc::new(VecModel::from(entries))));
                 })?;
         }
 

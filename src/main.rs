@@ -18,7 +18,7 @@ mod ui_functions;
 
 slint::include_modules!();
 
-#[tokio::main]
+#[tokio::main(worker_threads = 2)]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = config::Args::parse();
 
