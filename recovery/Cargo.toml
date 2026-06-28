@@ -15,7 +15,10 @@ pc = ["slint/accessibility", "slint/backend-default", "slint/renderer-femtovg"]
 driver = { path = "../driver" }
 
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
-image = "cross-armv7:latest"
+pre-build = [
+    "apt-get update",
+    "apt-get install -y libfontconfig1-dev libssl-dev openssl pkg-config",
+]
 
 [build-dependencies]
 slint-build = { version = "1.15.1", package = "slint-build" }

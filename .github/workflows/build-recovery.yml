@@ -23,8 +23,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build container
-        run: docker build -t cross-armv7:latest -f armv7.dockerfile .
+      #- name: Build container
+      #  run: docker build -t cross-armv7:latest -f armv7.dockerfile .
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
