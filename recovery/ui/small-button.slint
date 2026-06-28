@@ -1,0 +1,38 @@
+import { Palette, StyleMetrics } from "std-widgets.slint";
+
+export component SmallButton inherits Rectangle {
+    in property <string> text;
+    in property <image> icon;
+    callback clicked();
+
+    background: Palette.control-background;
+    border-radius: 12px;
+
+    states [
+        pressed when touch-area.pressed : {
+            root.opacity: 0.5;
+        }
+    ]
+
+    GridLayout {
+        padding-left: StyleMetrics.layout-padding / 2;
+        padding-right: StyleMetrics.layout-padding / 2;
+
+        Rectangle {
+            touch-area := TouchArea {
+                clicked => { root.clicked(); }
+            }
+
+            HorizontalLayout {
+                alignment: LayoutAlignment.center;
+
+                if root.text != "": Text {
+                    text: root.text;
+                    color: Palette.control-foreground;
+                    vertical-alignment: center;
+                    font-size: 12px;
+                }
+            }
+        }
+    }
+}

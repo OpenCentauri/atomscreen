@@ -1,4 +1,5 @@
 import "../AdwaitaSans-Regular.ttf";
+import { SmallButton } from "small-button.slint";
 import { ScrollView, Button, Spinner, StyleMetrics, Palette } from "std-widgets.slint";
 
 export struct Task {
@@ -9,15 +10,19 @@ export struct Task {
 
 export global State {
     in-out property <[string]> actions;
+    in-out property <[string]> submenus;
     in-out property <string> active-action;
     in-out property <int> active-action-state;
     in-out property <[Task]> active-action-tasks;
     in-out property <[string]> active-action-buttons;
     in-out property <string> window-title;
+    in-out property <bool> show-back;
     in-out property <int> spinner-rotation;
 
     callback action-button-click(name: string);
     callback action-start(name: string);
+    callback action-submenu-enter(name: string);
+    callback action-exit-submenu();
 }
 
 export component ActionState inherits Rectangle {
@@ -87,6 +92,7 @@ export component TaskEntry {
 
 export component ActionEntry {
     in property <string> action;
+    in property <bool> is-submenu;
 
     HorizontalLayout {
         alignment: LayoutAlignment.stretch;
@@ -103,11 +109,15 @@ export component ActionEntry {
         }
 
         Button {
-            icon: @image-url("./assets/run.svg");
+            icon: is-submenu ? @image-url("./assets/menu.svg") : @image-url("./assets/run.svg");
             colorize-icon: true;
-            text: "Run";
+            text:  is-submenu ? "Menu" : "Run";
             clicked => {
-                State.action-start(action);
+                if (is-submenu) {
+                    State.action-submenu-enter(action);
+                } else {
+                    State.action-start(action);
+                }
             }
         }
     }
@@ -185,11 +195,28 @@ export component ActionList {
         padding: StyleMetrics.layout-padding / 2;
         spacing: StyleMetrics.layout-spacing / 2;
 
-        Text {
-            text: State.window-title;
-            font-size: 18px;
-            horizontal-alignment: center;
-            vertical-alignment: center;
+        Rectangle {
+            if State.show-back: HorizontalLayout {
+                alignment: LayoutAlignment.start;
+
+                SmallButton {
+                    //icon: @image-url("./assets/back.svg");
+                    //colorize-icon: true;
+                    width: 80px;
+                    text: "Back";
+                    clicked => {
+                        State.action-exit-submenu();
+                    }
+                }
+            }
+
+            Text {
+                text: State.window-title;
+                font-size: 18px;
+                horizontal-stretch: 1;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
 
         Rectangle { 
@@ -206,6 +233,11 @@ export component ActionList {
                     VerticalLayout {
                         alignment: LayoutAlignment.start;
                         spacing: StyleMetrics.layout-spacing;
+
+                        for submenu in State.submenus: ActionEntry {
+                            action: submenu;
+                            is-submenu: true;
+                        }
 
                         for action in State.actions: ActionEntry {
                             action: action;
@@ -273,7 +305,9 @@ component TestActionList {
 
     init => {
         State.window-title = "OpenCentauri recovery";
-        State.actions = ["Install Patched Firmware (Online)", "Install Patched Firmware (Offline)", "Reboot"]
+        State.show-back = true;
+        State.actions = ["Install Patched Firmware (Online)", "Install Patched Firmware (Offline)", "Reboot"];
+        State.submenus = ["Advanced Options", "Settings"];
     }
     
     ActionList {

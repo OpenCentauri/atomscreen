@@ -1,4 +1,4 @@
-use std::{process::Command, thread};
+use std::{collections::HashMap, process::Command, thread};
 
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel, Weak};
 
@@ -68,7 +68,7 @@ pub fn handle_command(command: &[String], ui_weak: &Weak<AppWindow>) -> (i32, St
     }
 }
 
-pub fn register_action_button_click(ui: &AppWindow, scripts: &Vec<Script>) {
+pub fn register_action_button_click(ui: &AppWindow, scripts: &HashMap<String, Script>) {
     let ui_weak = ui.as_weak();
     let scripts = scripts.clone();
 
@@ -78,8 +78,7 @@ pub fn register_action_button_click(ui: &AppWindow, scripts: &Vec<Script>) {
         let ui = ui_weak.upgrade().expect("Failed to upgrade weak reference to UI");
 
         let current_action_str = ui.global::<State>().get_active_action();
-        let current_action_str = current_action_str.as_str();
-        let current_action = match scripts.iter().find(|s| s.name == current_action_str) {
+        let current_action = match scripts.get(current_action_str.as_str()) {
             Some(action) => action,
             None => return,
         };
@@ -186,14 +185,14 @@ pub fn process_script_tasks(ui_weak: Weak<AppWindow>, script: Script) {
     publish_script_buttons(ui_weak, &script.completed_actions);
 }
 
-pub fn register_action_start(ui: &AppWindow, scripts: &Vec<Script>) {
+pub fn register_action_start(ui: &AppWindow, scripts: &HashMap<String, Script>) {
     let ui_weak = ui.as_weak();
     let scripts = scripts.clone();
 
     ui.global::<State>().on_action_start(move |action_name| {
         let ui_weak = ui_weak.clone();
 
-        let action_to_run = match scripts.iter().find(|s| s.name == action_name.as_str()) {
+        let action_to_run = match scripts.get(action_name.as_str()) {
             Some(action) => action.clone(),
             None => return,
         };

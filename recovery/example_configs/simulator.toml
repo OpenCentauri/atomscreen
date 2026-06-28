@@ -29,3 +29,10 @@ stop_on_failure = false
 [[scripts."Script 1".tasks]]
 name = "Test3"
 command = ["/bin/sh", "-c", "sleep 5; echo \"Test3\"; exit 1"]
+
+[submenus."Submenu"."Script 2"]
+hide_pending_tasks = true
+tasks = [
+    { name = "Test4", command = ["/bin/sh", "-c", "sleep 5; echo \"Test4\""], show_stdout = true, stop_on_failure = false },
+    { name = "Test5", command = ["/bin/sh", "-c", "sleep 5; echo \"Test5\""], show_stdout = true, stop_on_failure = false },
+]
