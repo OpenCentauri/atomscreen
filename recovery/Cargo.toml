@@ -14,6 +14,9 @@ pc = ["slint/accessibility", "slint/backend-default", "slint/renderer-femtovg"]
 [target.'cfg(unix)'.dependencies]
 driver = { path = "../driver" }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+fontique = { version = "0.8.0", default-features = false, features = ["fontconfig-dlopen"] }
+
 [workspace.metadata.cross.target.armv7-unknown-linux-musleabihf]
 pre-build = [
     "apt-get update",
