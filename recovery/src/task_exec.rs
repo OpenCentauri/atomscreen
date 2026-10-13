@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::Command, thread};
+use std::{collections::HashMap, io::{BufRead, BufReader}, process::{Command, Stdio}, thread, time::{Duration, Instant}};
 
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel, Weak};
 
@@ -48,23 +48,86 @@ pub fn handle_command(command: &[String], ui_weak: &Weak<AppWindow>) -> (i32, St
 
             (0, String::new())
         }
-        _ => {
-            let output = Command::new(&command[0])
-                .args(&command[1..])
-                .output();
+        _ => run_streaming(command, &mut |_| {}),
+    }
+}
 
-            let output = match output {
-                Ok(output) => output,
-                Err(e) => {
-                    return (-1, format!("Failed to execute command: {}", e));
-                }
-            };
+// Spawn the command with piped stdout, invoking `sink` with each line as it
+// arrives (so callers can render progress live) while still accumulating and
+// returning the full output like Command::output() did. stderr is drained on
+// a helper thread to keep a chatty child from deadlocking on a full pipe.
+fn run_streaming(command: &[String], sink: &mut dyn FnMut(&str)) -> (i32, String) {
+    let child = Command::new(&command[0])
+        .args(&command[1..])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn();
 
-            return (
-                output.status.code().unwrap_or(-1),
-                String::from_utf8_lossy(&output.stdout).to_string(),
-            );
+    let mut child = match child {
+        Ok(child) => child,
+        Err(e) => {
+            return (-1, format!("Failed to execute command: {}", e));
         }
+    };
+
+    if let Some(stderr) = child.stderr.take() {
+        thread::spawn(move || {
+            let _ = std::io::copy(&mut BufReader::new(stderr), &mut std::io::sink());
+        });
+    }
+
+    let mut output = String::new();
+    if let Some(stdout) = child.stdout.take() {
+        let mut reader = BufReader::new(stdout);
+        let mut line = String::new();
+        loop {
+            line.clear();
+            match reader.read_line(&mut line) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {
+                    output.push_str(&line);
+                    sink(&line);
+                }
+            }
+        }
+    }
+
+    match child.wait() {
+        Ok(status) => (status.code().unwrap_or(-1), output),
+        Err(e) => (-1, format!("Failed to wait on command: {}\n{}", e, output)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::run_streaming;
+
+    #[test]
+    fn streams_lines_and_accumulates() {
+        let cmd: Vec<String> = ["/bin/sh", "-c", "echo one; echo two; echo three"]
+            .iter().map(|s| s.to_string()).collect();
+        let mut lines = 0;
+        let (code, out) = run_streaming(&cmd, &mut |_| lines += 1);
+        assert_eq!(code, 0);
+        assert_eq!(out, "one\ntwo\nthree\n");
+        assert_eq!(lines, 3);
+    }
+
+    #[test]
+    fn noisy_stderr_does_not_deadlock() {
+        let cmd: Vec<String> = ["/bin/sh", "-c", "seq 1 2000 >&2; echo done"]
+            .iter().map(|s| s.to_string()).collect();
+        let (code, out) = run_streaming(&cmd, &mut |_| {});
+        assert_eq!(code, 0);
+        assert_eq!(out, "done\n");
+    }
+
+    #[test]
+    fn reports_spawn_failure() {
+        let cmd: Vec<String> = ["/nonexistent/binary"].iter().map(|s| s.to_string()).collect();
+        let (code, out) = run_streaming(&cmd, &mut |_| {});
+        assert_eq!(code, -1);
+        assert!(out.contains("Failed to execute command"));
     }
 }
 
@@ -155,10 +218,24 @@ pub fn process_script_tasks(ui_weak: Weak<AppWindow>, script: Script) {
         }
 
         publish_script_tasks(ui_weak.clone(), &tasks, hide_pending);
-        
-        let (exit_code, output) = handle_command(&read_only_task.command, &ui_weak);
 
-        if read_only_task.show_stdout {
+        // Stream stdout into the task's message as it arrives so long tasks
+        // show live progress; republish throttled, full text assigned at end.
+        let show_stdout = read_only_task.show_stdout;
+        let mut last_publish = None::<Instant>;
+        let (exit_code, output) = if show_stdout {
+            run_streaming(&read_only_task.command, &mut |line| {
+                tasks.get_mut(i).unwrap().message.push_str(line);
+                if last_publish.map_or(true, |t| t.elapsed() >= Duration::from_millis(250)) {
+                    publish_script_tasks(ui_weak.clone(), &tasks, hide_pending);
+                    last_publish = Some(Instant::now());
+                }
+            })
+        } else {
+            handle_command(&read_only_task.command, &ui_weak)
+        };
+
+        if show_stdout {
             let task = tasks.get_mut(i).unwrap();
             task.message = output;
         }
