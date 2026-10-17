@@ -5,6 +5,8 @@ use crate::config::{DisplayConfig, DisplayInit, Script, ScriptInner};
 
 mod config;
 mod task_exec;
+#[cfg(test)]
+mod menu_tests;
 
 slint::include_modules!();
 
@@ -48,6 +50,16 @@ fn to_shared_string_model(values: impl IntoIterator<Item = String>) -> ModelRc<S
     ))
 }
 
+fn to_action_model(scripts: &[Script]) -> ModelRc<MenuAction> {
+    ModelRc::new(VecModel::from(
+        scripts.iter().map(|script| MenuAction {
+            name: script.name.clone().into(),
+            disabled: script.disabled,
+            disabled_reason: script.disabled_reason.clone().into(),
+        }).collect::<Vec<_>>(),
+    ))
+}
+
 fn register_action_submenu_enter(
     ui: &AppWindow,
     submenu_scripts: &HashMap<String, Vec<Script>>,
@@ -66,9 +78,7 @@ fn register_action_submenu_enter(
 
         ui_weak
             .upgrade_in_event_loop(move |ui| {
-                ui.global::<State>().set_actions(to_shared_string_model(
-                    submenu_actions.into_iter().map(|action| action.name),
-                ));
+                ui.global::<State>().set_actions(to_action_model(&submenu_actions));
                 ui.global::<State>().set_submenus(to_shared_string_model(Vec::new()));
                 ui.global::<State>().set_show_back(true);
                 ui.global::<State>().set_window_title(SharedString::from(submenu_name));
@@ -96,9 +106,7 @@ fn register_action_exit_submenu(
 
         ui_weak
             .upgrade_in_event_loop(move |ui| {
-                ui.global::<State>().set_actions(to_shared_string_model(
-                    root_actions.into_iter().map(|action| action.name),
-                ));
+                ui.global::<State>().set_actions(to_action_model(&root_actions));
                 ui.global::<State>().set_submenus(to_shared_string_model(root_submenus));
                 ui.global::<State>().set_show_back(false);
                 ui.global::<State>().set_window_title(SharedString::from(root_window_title));
@@ -146,9 +154,7 @@ fn main() {
 
     let ui = init_display(&config.display);
 
-    ui.global::<State>().set_actions(to_shared_string_model(
-        root_actions.iter().map(|action| action.name.clone()),
-    ));
+    ui.global::<State>().set_actions(to_action_model(&root_actions));
     ui.global::<State>().set_submenus(to_shared_string_model(root_submenus.clone()));
     ui.global::<State>().set_show_back(false);
     ui.global::<State>().set_window_title(SharedString::from(root_window_title.clone()));

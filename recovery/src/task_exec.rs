@@ -203,6 +203,10 @@ pub fn publish_active_action_state(ui_weak: Weak<AppWindow>, action_name: &str, 
 }
 
 pub fn process_script_tasks(ui_weak: Weak<AppWindow>, script: Script) {
+    if script.disabled {
+        return;
+    }
+
     let mut tasks : Vec<ScriptTask> = script.tasks.into_iter().map(|x| ScriptTask::from_raw(x)).collect();
     let hide_pending = script.hide_pending_tasks;
     publish_script_tasks(ui_weak.clone(), &tasks, hide_pending);
