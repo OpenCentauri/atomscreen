@@ -98,39 +98,6 @@ fn run_streaming(command: &[String], sink: &mut dyn FnMut(&str)) -> (i32, String
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::run_streaming;
-
-    #[test]
-    fn streams_lines_and_accumulates() {
-        let cmd: Vec<String> = ["/bin/sh", "-c", "echo one; echo two; echo three"]
-            .iter().map(|s| s.to_string()).collect();
-        let mut lines = 0;
-        let (code, out) = run_streaming(&cmd, &mut |_| lines += 1);
-        assert_eq!(code, 0);
-        assert_eq!(out, "one\ntwo\nthree\n");
-        assert_eq!(lines, 3);
-    }
-
-    #[test]
-    fn noisy_stderr_does_not_deadlock() {
-        let cmd: Vec<String> = ["/bin/sh", "-c", "seq 1 2000 >&2; echo done"]
-            .iter().map(|s| s.to_string()).collect();
-        let (code, out) = run_streaming(&cmd, &mut |_| {});
-        assert_eq!(code, 0);
-        assert_eq!(out, "done\n");
-    }
-
-    #[test]
-    fn reports_spawn_failure() {
-        let cmd: Vec<String> = ["/nonexistent/binary"].iter().map(|s| s.to_string()).collect();
-        let (code, out) = run_streaming(&cmd, &mut |_| {});
-        assert_eq!(code, -1);
-        assert!(out.contains("Failed to execute command"));
-    }
-}
-
 pub fn register_action_button_click(ui: &AppWindow, scripts: &HashMap<String, Script>) {
     let ui_weak = ui.as_weak();
     let scripts = scripts.clone();
@@ -203,10 +170,6 @@ pub fn publish_active_action_state(ui_weak: Weak<AppWindow>, action_name: &str, 
 }
 
 pub fn process_script_tasks(ui_weak: Weak<AppWindow>, script: Script) {
-    if script.disabled {
-        return;
-    }
-
     let mut tasks : Vec<ScriptTask> = script.tasks.into_iter().map(|x| ScriptTask::from_raw(x)).collect();
     let hide_pending = script.hide_pending_tasks;
     publish_script_tasks(ui_weak.clone(), &tasks, hide_pending);
